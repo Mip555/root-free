@@ -587,8 +587,23 @@ body {
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
+  width: 100%;
 }
 .rel-item:last-child { border-bottom: none; }
+.rel-remove {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color .12s, background .12s;
+}
+.rel-remove:hover { color: var(--danger); background: var(--danger-light); }
 .rel-tag {
   font-size: 10px;
   font-weight: 600;
@@ -775,6 +790,51 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .join-card h2 { font-family: 'Lora', serif; font-size: 20px; font-weight: 500; margin-bottom: 8px; color: var(--text); }
 .join-card p { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-bottom: 0; }
+
+/* ── DARK MODE ── */
+body.dark {
+  --bg:          #141414;
+  --surface:     #1e1e1e;
+  --border:      #2e2e2e;
+  --border-mid:  #3e3e3e;
+  --text:        #e8e8e4;
+  --text-mid:    #a0a09a;
+  --text-light:  #666660;
+  --green:       #52b788;
+  --green-light: #1a2e22;
+  --green-mid:   #52b788;
+  --accent:      #d4a96a;
+  --accent-light:#2a1e0e;
+  --danger:      #e05555;
+  --danger-light:#2a1010;
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg:   0 8px 28px rgba(0,0,0,0.5);
+}
+body.dark .canvas-bg {
+  background-image:
+    linear-gradient(#2a2a2a 1px, transparent 1px),
+    linear-gradient(90deg, #2a2a2a 1px, transparent 1px);
+}
+body.dark .view-tab.active { background: #2e2e2e; }
+body.dark .data-table tr:hover td { background: #252525; }
+body.dark .sync-bar { background: #0e1a12; border-color: #0a1209; }
+
+/* dark mode toggle button */
+.dark-toggle {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-mid);
+  transition: all .15s;
+  flex-shrink: 0;
+  font-size: 15px;
+}
+.dark-toggle:hover { border-color: var(--border-mid); color: var(--text); background: var(--bg); }
+
 </style>
 </head>
 <body>
@@ -812,6 +872,7 @@ body {
       <button class="btn" onclick="exportJson()">Backup</button>
       <button class="btn" onclick="importJson()">Restore</button>
       <button class="btn btn-danger" onclick="confirmDeleteAll()">Delete All</button>
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">◐</button>
     </div>
   </header>
 
@@ -1607,13 +1668,55 @@ function viewPerson(id){
   const p = state.people[id]; const gc = gClass(p.gender);
   document.getElementById('view-header').style.borderBottom = '2px solid ' + (gc==='male'?'var(--green)':gc==='female'?'#6b4fa0':'var(--border-mid)');
   document.getElementById('view-name').textContent = fullName(p);
-  const rels = state.relationships.filter(r => r.a===id || r.b===id).map(rel => {
-    const oid = rel.a===id ? rel.b : rel.a; const other = state.people[oid]; if(!other) return null;
-    const rev = { parent:'child', child:'parent', partner:'partner', sibling:'sibling' };
-    const label = rel.a===id ? rel.type : rev[rel.type]||rel.type;
-    return `<div class="rel-item"><span class="rel-tag">${label}</span><a class="rel-name" href="#" onclick="closeModal('modal-view');viewPerson('${oid}');return false">${fullName(other)}</a></div>`;
-  }).filter(Boolean);
   const canEdit = !peer || isHost || shareMode === 'edit';
+
+  // Build deduplicated relationship list.
+  // Problem: if James is child of both Thomas AND Margaret, we get two separate
+  // "child of Thomas" and "child of Margaret" entries which looks cluttered.
+  // Fix: group parent relationships — if multiple people are all parents of this
+  // person, show them on one line: "child of Thomas Ellis & Margaret Ellis"
+  const raw = state.relationships.filter(r => r.a===id || r.b===id);
+  const rev = { parent:'child', child:'parent', partner:'partner', sibling:'sibling' };
+
+  // Separate parent-of-this-person rels from everything else
+  const parentRels = raw.filter(r => {
+    const label = r.a===id ? r.type : rev[r.type];
+    return label === 'child'; // "this person is child of..."
+  });
+  const otherRels = raw.filter(r => {
+    const label = r.a===id ? r.type : rev[r.type];
+    return label !== 'child';
+  });
+
+  const relItems = [];
+
+  // Group all parents into one line
+  if(parentRels.length > 0){
+    const parentIds = parentRels.map(r => r.a===id ? r.b : r.a);
+    const parentNames = parentIds.map(pid => {
+      const op = state.people[pid]; if(!op) return null;
+      return `<a class="rel-name" href="#" onclick="closeModal('modal-view');viewPerson('${pid}');return false">${fullName(op)}</a>`;
+    }).filter(Boolean);
+    if(parentNames.length){
+      const removeBtn = canEdit
+        ? `<button class="rel-remove" onclick="removeRelationshipGroup(${JSON.stringify(parentIds)},'${id}')">Remove</button>`
+        : '';
+      relItems.push(`<div class="rel-item"><span class="rel-tag">child of</span>${parentNames.join(' &amp; ')}${removeBtn}</div>`);
+    }
+  }
+
+  // All other relationships
+  otherRels.forEach(rel => {
+    const oid = rel.a===id ? rel.b : rel.a;
+    const other = state.people[oid]; if(!other) return;
+    const label = rel.a===id ? rel.type : rev[rel.type]||rel.type;
+    const relIdx = state.relationships.indexOf(rel);
+    const removeBtn = canEdit
+      ? `<button class="rel-remove" onclick="removeRelationship(${relIdx},'${id}')">Remove</button>`
+      : '';
+    relItems.push(`<div class="rel-item"><span class="rel-tag">${label}</span><a class="rel-name" href="#" onclick="closeModal('modal-view');viewPerson('${oid}');return false">${fullName(other)}</a>${removeBtn}</div>`);
+  });
+
   document.getElementById('view-body').innerHTML = `
     ${p.photo ? `<img class="detail-photo" src="${p.photo}" alt="${fullName(p)}">` : ''}
     <table class="detail-table">
@@ -1623,12 +1726,32 @@ function viewPerson(id){
       ${p.occupation ? `<tr><td>Occupation</td><td>${p.occupation}</td></tr>` : ''}
       ${p.notes ? `<tr><td>Notes</td><td style="line-height:1.6">${p.notes}</td></tr>` : ''}
     </table>
-    ${rels.length ? `<div class="rels-section"><div class="section-label" style="margin-top:16px">Connections</div>${rels.join('')}</div>` : '<div style="margin-top:16px;font-size:12px;color:var(--text-light)">No connections added yet.</div>'}`;
+    ${relItems.length ? `<div class="rels-section"><div class="section-label" style="margin-top:16px">Connections</div>${relItems.join('')}</div>` : '<div style="margin-top:16px;font-size:12px;color:var(--text-light)">No connections added yet.</div>'}`;
   document.getElementById('view-edit-btn').style.display = canEdit ? '' : 'none';
   document.getElementById('view-delete-btn').style.display = canEdit ? '' : 'none';
   document.getElementById('view-edit-btn').onclick = () => { closeModal('modal-view'); editPerson(id); };
   document.getElementById('view-delete-btn').onclick = () => { if(confirm('Delete ' + fullName(p) + '?')){ deletePerson(id); closeModal('modal-view'); } };
   document.getElementById('modal-view').style.display = 'flex';
+}
+
+function removeRelationship(idx, personId){
+  if(!confirm('Remove this connection?')) return;
+  state.relationships.splice(idx, 1);
+  saveState(); render(); broadcast();
+  viewPerson(personId); // refresh the modal
+  showToast('Connection removed');
+}
+
+function removeRelationshipGroup(parentIds, childId){
+  if(!confirm('Remove all parent connections for this person?')) return;
+  state.relationships = state.relationships.filter(r => {
+    // Remove any rel that is a parent→child or child→parent between these parents and this child
+    const isParentRel = (r.a===childId || r.b===childId) && parentIds.includes(r.a===childId ? r.b : r.a);
+    return !isParentRel;
+  });
+  saveState(); render(); broadcast();
+  viewPerson(childId);
+  showToast('Parent connections removed');
 }
 
 // ═══════════════════════════════════════
@@ -1857,8 +1980,27 @@ function exportGedcom(){
 }
 
 // ═══════════════════════════════════════
+// DARK MODE
+// ═══════════════════════════════════════
+function toggleDark(){
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('rootfree_dark', isDark ? '1' : '0');
+  document.getElementById('dark-toggle').textContent = isDark ? '○' : '◐';
+}
+function initDark(){
+  const saved = localStorage.getItem('rootfree_dark');
+  // Also respect OS preference if no saved preference
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(saved === '1' || (saved === null && prefersDark)){
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '○';
+  }
+}
+
+// ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
+initDark();
 loadState();
 </script>
 </body>
