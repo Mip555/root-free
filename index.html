@@ -1477,115 +1477,116 @@ function updateCanvasSize(){
 function drawConnectors(){
   const svg = document.getElementById('connector-svg');
   svg.innerHTML = '';
-  const GREEN = '#2d6a4f', PARTNER = '#b07d3a', SIBLING = '#6b4fa0';
-  const CARD_W = 172, CARD_H = 190, GAP = 40;
+  const GREEN='#2d6a4f', PARTNER='#b07d3a', SIBLING='#6b4fa0';
+  const CARD_W=172, CARD_H=190;
 
-  function ci(p){
-    if(!p) return null;
-    const x=p.x||0, y=p.y||0;
-    return { cx:x+CARD_W/2, top:y, bottom:y+CARD_H, mid:y+CARD_H/2 };
-  }
+  function cx(p){ return (p.x||0)+CARD_W/2; }
+  function top(p){ return (p.y||0); }
+  function bot(p){ return (p.y||0)+CARD_H; }
+  function mid(p){ return (p.y||0)+CARD_H/2; }
+
   function seg(x1,y1,x2,y2,col,dash){
-    const el=document.createElementNS('http://www.w3.org/2000/svg','line');
-    el.setAttribute('x1',Math.round(x1)); el.setAttribute('y1',Math.round(y1));
-    el.setAttribute('x2',Math.round(x2)); el.setAttribute('y2',Math.round(y2));
-    el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.8');
-    el.setAttribute('opacity','0.65');
-    if(dash) el.setAttribute('stroke-dasharray',dash);
-    svg.appendChild(el);
+    const e=document.createElementNS('http://www.w3.org/2000/svg','line');
+    e.setAttribute('x1',x1|0); e.setAttribute('y1',y1|0);
+    e.setAttribute('x2',x2|0); e.setAttribute('y2',y2|0);
+    e.setAttribute('stroke',col); e.setAttribute('stroke-width','1.8');
+    e.setAttribute('opacity','0.65');
+    if(dash) e.setAttribute('stroke-dasharray',dash);
+    svg.appendChild(e);
   }
   function bez(x1,y1,x2,y2,col,dash){
-    const el=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const e=document.createElementNS('http://www.w3.org/2000/svg','path');
     const my=(y1+y2)/2;
-    el.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
-    el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.8');
-    el.setAttribute('fill','none'); el.setAttribute('opacity','0.65');
-    if(dash) el.setAttribute('stroke-dasharray',dash);
-    svg.appendChild(el);
+    e.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+    e.setAttribute('stroke',col); e.setAttribute('stroke-width','1.8');
+    e.setAttribute('fill','none'); e.setAttribute('opacity','0.65');
+    if(dash) e.setAttribute('stroke-dasharray',dash);
+    svg.appendChild(e);
   }
   function lbl(x,y,t,col){
-    const el=document.createElementNS('http://www.w3.org/2000/svg','text');
-    el.setAttribute('x',Math.round(x)); el.setAttribute('y',Math.round(y));
-    el.setAttribute('text-anchor','middle'); el.setAttribute('font-size','10');
-    el.setAttribute('fill',col); el.setAttribute('opacity','0.8');
-    el.setAttribute('font-family','Inter,sans-serif'); el.setAttribute('font-weight','500');
-    el.textContent=t; svg.appendChild(el);
+    const e=document.createElementNS('http://www.w3.org/2000/svg','text');
+    e.setAttribute('x',x|0); e.setAttribute('y',y|0);
+    e.setAttribute('text-anchor','middle'); e.setAttribute('font-size','10');
+    e.setAttribute('fill',col); e.setAttribute('opacity','0.8');
+    e.setAttribute('font-family','Inter,sans-serif'); e.setAttribute('font-weight','500');
+    e.textContent=t; svg.appendChild(e);
   }
 
-  // Partners
+  // Partners — simple curve
   state.relationships.filter(r=>r.type==='partner').forEach(rel=>{
-    const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ai=ci(a), bi=ci(b);
-    bez(ai.cx,ai.mid,bi.cx,bi.mid,PARTNER,'6 4');
-    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'partner',PARTNER);
+    const a=state.people[rel.a],b=state.people[rel.b]; if(!a||!b) return;
+    bez(cx(a),mid(a),cx(b),mid(b),PARTNER,'6 4');
+    lbl((cx(a)+cx(b))/2,(mid(a)+mid(b))/2-8,'partner',PARTNER);
   });
 
-  // Siblings
+  // Siblings — simple curve
   state.relationships.filter(r=>r.type==='sibling').forEach(rel=>{
-    const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ai=ci(a), bi=ci(b);
-    bez(ai.cx,ai.mid,bi.cx,bi.mid,SIBLING,'4 3');
-    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'sibling',SIBLING);
+    const a=state.people[rel.a],b=state.people[rel.b]; if(!a||!b) return;
+    bez(cx(a),mid(a),cx(b),mid(b),SIBLING,'4 3');
+    lbl((cx(a)+cx(b))/2,(mid(a)+mid(b))/2-8,'sibling',SIBLING);
   });
 
-  // Normalise parent-child
+  // Build parent→children map (normalised)
   const pairs=[];
   state.relationships.forEach(r=>{
     if(r.type==='parent') pairs.push({pid:r.a,cid:r.b});
     if(r.type==='child')  pairs.push({pid:r.b,cid:r.a});
   });
 
-  // Group by child → get all parents per child
+  // byChild: childId → [parentIds]
   const byChild={};
   pairs.forEach(({pid,cid})=>{
     if(!byChild[cid]) byChild[cid]=[];
     if(!byChild[cid].includes(pid)) byChild[cid].push(pid);
   });
 
-  // Group by parent-set → get all children per unique set of parents
-  // Key = sorted parent ids joined
-  const byParentSet={};
+  // Group children that share the exact same set of parents
+  const groups={};
   Object.entries(byChild).forEach(([cid,pids])=>{
-    const key=[...pids].sort().join(',');
-    if(!byParentSet[key]) byParentSet[key]={pids, cids:[]};
-    byParentSet[key].cids.push(cid);
+    const key=[...pids].sort().join('|');
+    if(!groups[key]) groups[key]={pids:[...pids],cids:[]};
+    if(!groups[key].cids.includes(cid)) groups[key].cids.push(cid);
   });
 
-  Object.values(byParentSet).forEach(({pids, cids})=>{
-    const pinfos = pids.map(id=>ci(state.people[id])).filter(Boolean);
-    const cinfos = cids.map(id=>ci(state.people[id])).filter(Boolean);
-    if(!pinfos.length || !cinfos.length) return;
+  Object.values(groups).forEach(({pids,cids})=>{
+    const parents  = pids.map(id=>state.people[id]).filter(Boolean);
+    const children = cids.map(id=>state.people[id]).filter(Boolean);
+    if(!parents.length||!children.length) return;
 
-    // Parent junction bar Y = halfway between parent bottoms and child tops
-    const parentBottomY = Math.max(...pinfos.map(p=>p.bottom));
-    const childTopY     = Math.min(...cinfos.map(c=>c.top));
-    const midY          = Math.round((parentBottomY + childTopY) / 2);
+    // Junction Y = midpoint between lowest parent bottom and highest child top
+    const parBotY  = Math.max(...parents.map(p=>bot(p)));
+    const chiTopY  = Math.min(...children.map(c=>top(c)));
+    const jY       = Math.round((parBotY+chiTopY)/2);
 
-    // ── Parent side ──
-    const pxs = pinfos.map(p=>p.cx);
-    const pBarL = Math.min(...pxs), pBarR = Math.max(...pxs);
-    const pBarMid = (pBarL+pBarR)/2;
+    // Parent coupling point X = midpoint of all parent centerXs
+    const parXs    = parents.map(p=>cx(p));
+    const coupleX  = Math.round((Math.min(...parXs)+Math.max(...parXs))/2);
 
-    // Drop each parent down to midY
-    pinfos.forEach(pi=>seg(pi.cx, pi.bottom, pi.cx, midY, GREEN));
-    // Horizontal bar across all parents
-    if(pinfos.length > 1) seg(pBarL, midY, pBarR, midY, GREEN);
+    // 1. Drop each parent down to jY
+    parents.forEach(p=>seg(cx(p),bot(p),cx(p),jY,GREEN));
+    // 2. If multiple parents, horizontal bar between them at jY
+    if(parents.length>1){
+      seg(Math.min(...parXs),jY,Math.max(...parXs),jY,GREEN);
+    }
+    // 3. Single vertical stem from coupleX down to jY+20
+    const stemBotY = jY+20;
+    seg(coupleX,jY,coupleX,stemBotY,GREEN);
 
-    // ── Child side ──
-    const cxs = cinfos.map(c=>c.cx);
-    const cBarL = Math.min(...cxs), cBarR = Math.max(...cxs);
-    const cBarMid = (cBarL+cBarR)/2;
+    // 4. If multiple children, horizontal bar across children at stemBotY
+    const chiXs = children.map(c=>cx(c));
+    if(children.length>1){
+      seg(Math.min(...chiXs),stemBotY,Math.max(...chiXs),stemBotY,GREEN);
+    } else {
+      // single child — extend stem to meet child cx if offset
+      if(coupleX!==chiXs[0]) seg(coupleX,stemBotY,chiXs[0],stemBotY,GREEN);
+    }
 
-    // Single stem from parent bar midpoint down to child bar
-    seg(pBarMid, midY, cBarMid, midY, GREEN);   // horizontal connector if offset
-    seg(cBarMid, midY, cBarMid, midY+GAP/2, GREEN); // short drop to child bar
-    // Horizontal bar across all children
-    if(cinfos.length > 1) seg(cBarL, midY+GAP/2, cBarR, midY+GAP/2, GREEN);
-    // Drop from child bar down to each child top
-    cinfos.forEach(ch=>seg(ch.cx, midY+GAP/2, ch.cx, ch.top, GREEN));
+    // 5. Drop from children bar down to each child top
+    children.forEach(c=>seg(cx(c),stemBotY,cx(c),top(c),GREEN));
 
-    // Single label
-    lbl(cBarMid, midY+GAP/2-6, 'child', GREEN);
+    // Label
+    const labelX=children.length>1?(Math.min(...chiXs)+Math.max(...chiXs))/2:chiXs[0];
+    lbl(labelX,stemBotY-8,'child',GREEN);
   });
 }
 
