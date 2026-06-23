@@ -1568,25 +1568,28 @@ function drawConnectors(){
     if(parents.length>1){
       seg(Math.min(...parXs),jY,Math.max(...parXs),jY,GREEN);
     }
-    // 3. Single vertical stem from coupleX down to jY+20
-    const stemBotY = jY+20;
-    seg(coupleX,jY,coupleX,stemBotY,GREEN);
-
-    // 4. If multiple children, horizontal bar across children at stemBotY
+    // 3. Children bar Y — halfway between jY and first child top
     const chiXs = children.map(c=>cx(c));
-    if(children.length>1){
-      seg(Math.min(...chiXs),stemBotY,Math.max(...chiXs),stemBotY,GREEN);
-    } else {
-      // single child — extend stem to meet child cx if offset
-      if(coupleX!==chiXs[0]) seg(coupleX,stemBotY,chiXs[0],stemBotY,GREEN);
+    const chiMinX = Math.min(...chiXs), chiMaxX = Math.max(...chiXs);
+    const chiBarY = jY + 20;
+
+    // Stem from parent coupling point down to children bar
+    seg(coupleX, jY, coupleX, chiBarY, GREEN);
+
+    // Horizontal bar across children (only if >1 child, and only if needed)
+    if(children.length > 1){
+      seg(chiMinX, chiBarY, chiMaxX, chiBarY, GREEN);
+    } else if(coupleX !== chiXs[0]){
+      // single child offset from stem — connect horizontally
+      seg(coupleX, chiBarY, chiXs[0], chiBarY, GREEN);
     }
 
-    // 5. Drop from children bar down to each child top
-    children.forEach(c=>seg(cx(c),stemBotY,cx(c),top(c),GREEN));
+    // Drop from children bar down to each child top
+    children.forEach(c=>seg(cx(c),chiBarY,cx(c),top(c),GREEN));
 
-    // Label
-    const labelX=children.length>1?(Math.min(...chiXs)+Math.max(...chiXs))/2:chiXs[0];
-    lbl(labelX,stemBotY-8,'child',GREEN);
+    // Label sits just above children bar
+    const labelX=(chiMinX+chiMaxX)/2;
+    lbl(labelX, chiBarY-6, 'child', GREEN);
   });
 }
 
