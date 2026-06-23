@@ -1464,7 +1464,7 @@ function render(){
     makeDraggable(card, id);
     canvas.appendChild(card);
   });
-  drawConnectors(); updateCanvasSize();
+  updateCanvasSize(); requestAnimationFrame(()=>requestAnimationFrame(drawConnectors));
 }
 
 function updateCanvasSize(){
@@ -1609,7 +1609,7 @@ function makeDraggable(card, id){
       p.x = Math.max(0, (ev.clientX-bnd.left+wrap.scrollLeft)/currentZoom - ox);
       p.y = Math.max(0, (ev.clientY-bnd.top+wrap.scrollTop)/currentZoom - oy);
       card.style.left = p.x + 'px'; card.style.top = p.y + 'px';
-      drawConnectors(); updateCanvasSize();
+      updateCanvasSize(); requestAnimationFrame(drawConnectors);
     };
     const mu = () => {
       card.classList.remove('dragging');
