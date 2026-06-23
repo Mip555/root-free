@@ -1478,109 +1478,102 @@ function drawConnectors(){
   const svg = document.getElementById('connector-svg');
   svg.innerHTML = '';
   const GREEN = '#2d6a4f', PARTNER = '#b07d3a', SIBLING = '#6b4fa0';
+  const CARD_W = 172;
+  // Fixed heights — photo card is taller
+  const H_PHOTO = 190;  // card with photo (90px img + body + footer)
+  const H_NO_PHOTO = 190; // same — placeholder is also 90px tall
 
-  function info(p){
-    const el = document.getElementById('card-' + p.id);
-    if(!el) return null;
-    const x = parseFloat(el.style.left)||0;
-    const y = parseFloat(el.style.top)||0;
-    const w = el.offsetWidth||172;
-    const h = el.offsetHeight||180;
-    return { cx: x + w/2, top: y, bottom: y + h, mid: y + h/2, left: x, right: x+w };
+  function ci(p){
+    if(!p) return null;
+    const x = p.x||0, y = p.y||0;
+    const h = p.photo ? H_PHOTO : H_NO_PHOTO;
+    return { cx: x + CARD_W/2, top: y, bottom: y+h, mid: y+h/2 };
   }
 
-  function seg(x1,y1,x2,y2,col,dash,op){
-    const el = document.createElementNS('http://www.w3.org/2000/svg','line');
+  function seg(x1,y1,x2,y2,col,dash){
+    const el=document.createElementNS('http://www.w3.org/2000/svg','line');
     el.setAttribute('x1',Math.round(x1)); el.setAttribute('y1',Math.round(y1));
     el.setAttribute('x2',Math.round(x2)); el.setAttribute('y2',Math.round(y2));
-    el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.6');
-    el.setAttribute('opacity', op||'0.6');
-    if(dash) el.setAttribute('stroke-dasharray',dash);
-    svg.appendChild(el); return el;
-  }
-  function bez(x1,y1,x2,y2,col,dash){
-    const el = document.createElementNS('http://www.w3.org/2000/svg','path');
-    const my=(y1+y2)/2;
-    el.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
-    el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.6');
-    el.setAttribute('fill','none'); el.setAttribute('opacity','0.6');
+    el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.8');
+    el.setAttribute('opacity','0.65');
     if(dash) el.setAttribute('stroke-dasharray',dash);
     svg.appendChild(el);
   }
-  function txt(x,y,t,col){
-    const el = document.createElementNS('http://www.w3.org/2000/svg','text');
+  function bez(x1,y1,x2,y2,col,dash){
+    const el=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const my=(y1+y2)/2;
+    el.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
+    el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.8');
+    el.setAttribute('fill','none'); el.setAttribute('opacity','0.65');
+    if(dash) el.setAttribute('stroke-dasharray',dash);
+    svg.appendChild(el);
+  }
+  function lbl(x,y,t,col){
+    const el=document.createElementNS('http://www.w3.org/2000/svg','text');
     el.setAttribute('x',Math.round(x)); el.setAttribute('y',Math.round(y));
     el.setAttribute('text-anchor','middle'); el.setAttribute('font-size','10');
-    el.setAttribute('fill',col); el.setAttribute('opacity','0.75');
+    el.setAttribute('fill',col); el.setAttribute('opacity','0.8');
     el.setAttribute('font-family','Inter,sans-serif'); el.setAttribute('font-weight','500');
     el.textContent=t; svg.appendChild(el);
   }
 
-  // Partners — curved dashed line between card midpoints
+  // Partners
   state.relationships.filter(r=>r.type==='partner').forEach(rel=>{
     const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ai=info(a), bi=info(b); if(!ai||!bi) return;
+    const ai=ci(a), bi=ci(b);
     bez(ai.cx,ai.mid,bi.cx,bi.mid,PARTNER,'6 4');
-    txt((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'partner',PARTNER);
+    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'partner',PARTNER);
   });
 
-  // Siblings — curved dashed line
+  // Siblings
   state.relationships.filter(r=>r.type==='sibling').forEach(rel=>{
     const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ai=info(a), bi=info(b); if(!ai||!bi) return;
+    const ai=ci(a), bi=ci(b);
     bez(ai.cx,ai.mid,bi.cx,bi.mid,SIBLING,'4 3');
-    txt((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'sibling',SIBLING);
+    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'sibling',SIBLING);
   });
 
-  // Normalise all parent-child pairs
+  // Normalise parent-child pairs
   const pairs=[];
   state.relationships.forEach(r=>{
-    if(r.type==='parent') pairs.push({pid:r.a, cid:r.b});
-    if(r.type==='child')  pairs.push({pid:r.b, cid:r.a});
+    if(r.type==='parent') pairs.push({pid:r.a,cid:r.b});
+    if(r.type==='child')  pairs.push({pid:r.b,cid:r.a});
   });
-
-  // Group by child
   const byChild={};
   pairs.forEach(({pid,cid})=>{
     if(!byChild[cid]) byChild[cid]=[];
     if(!byChild[cid].includes(pid)) byChild[cid].push(pid);
   });
 
-  const GAP = 28; // vertical gap between cards for junction
+  const GAP=32;
 
-  Object.entries(byChild).forEach(([cid, pids])=>{
+  Object.entries(byChild).forEach(([cid,pids])=>{
     const child=state.people[cid]; if(!child) return;
-    const ci=info(child); if(!ci) return;
-    const jy = ci.top - GAP; // junction Y — horizontal bar sits here
+    const ch=ci(child);
+    const jy=ch.top-GAP;
 
-    const parInfos = pids.map(id=>{ const p=state.people[id]; return p?info(p):null; }).filter(Boolean);
-    if(!parInfos.length) return;
+    const pinfos=pids.map(id=>ci(state.people[id])).filter(Boolean);
+    if(!pinfos.length) return;
 
-    if(parInfos.length === 1){
-      // Single parent: straight elbow down then across then down to child
-      const pi = parInfos[0];
-      seg(pi.cx, pi.bottom, pi.cx, jy, GREEN);       // down from parent
-      seg(pi.cx, jy, ci.cx, jy, GREEN);              // across to child cx
-      seg(ci.cx, jy, ci.cx, ci.top, GREEN);          // down to child top
-      txt(ci.cx, ci.top - 10, 'child', GREEN);
+    if(pinfos.length===1){
+      const pi=pinfos[0];
+      seg(pi.cx, pi.bottom, pi.cx, jy, GREEN);
+      seg(pi.cx, jy, ch.cx, jy, GREEN);
+      seg(ch.cx, jy, ch.cx, ch.top, GREEN);
+      lbl(ch.cx, ch.top-12, 'child', GREEN);
     } else {
-      // Multiple parents: each drops down to jy, horizontal bar spans them,
-      // single drop from bar midpoint to child
-      const xs = parInfos.map(pi=>pi.cx);
-      const barLeft  = Math.min(...xs);
-      const barRight = Math.max(...xs);
-      const barMid   = (barLeft + barRight) / 2;
-
-      // Drop each parent to junction row
-      parInfos.forEach(pi=>{
-        seg(pi.cx, pi.bottom, pi.cx, jy, GREEN);
-      });
-      // Horizontal bar connecting all parents at junction row
-      seg(barLeft, jy, barRight, jy, GREEN);
-      // Single vertical drop from bar midpoint down to child top
-      seg(barMid, jy, ci.cx, jy + GAP/2, GREEN);    // diagonal if needed
-      seg(ci.cx, jy + GAP/2, ci.cx, ci.top, GREEN); // straight down
-      txt(ci.cx, ci.top - 10, 'child', GREEN);
+      const xs=pinfos.map(p=>p.cx);
+      const barL=Math.min(...xs), barR=Math.max(...xs);
+      const barMid=(barL+barR)/2;
+      // Drop each parent to bar
+      pinfos.forEach(pi=>seg(pi.cx,pi.bottom,pi.cx,jy,GREEN));
+      // Horizontal bar
+      seg(barL,jy,barR,jy,GREEN);
+      // Drop from midpoint to child
+      seg(barMid,jy,barMid,jy+GAP/2,GREEN);
+      seg(barMid,jy+GAP/2,ch.cx,jy+GAP/2,GREEN);
+      seg(ch.cx,jy+GAP/2,ch.cx,ch.top,GREEN);
+      lbl(ch.cx,ch.top-12,'child',GREEN);
     }
   });
 }
