@@ -835,6 +835,48 @@ body.dark .sync-bar { background: #0e1a12; border-color: #0a1209; }
 }
 .dark-toggle:hover { border-color: var(--border-mid); color: var(--text); background: var(--bg); }
 
+
+/* ── DARK MODE ── */
+body.dark {
+  --bg:          #141414;
+  --surface:     #1e1e1e;
+  --border:      #2e2e2e;
+  --border-mid:  #3e3e3e;
+  --text:        #e8e8e4;
+  --text-mid:    #a0a09a;
+  --text-light:  #666660;
+  --green:       #52b788;
+  --green-light: #1a2e22;
+  --green-mid:   #52b788;
+  --accent:      #d4a96a;
+  --accent-light:#2a1e0e;
+  --danger:      #e05555;
+  --danger-light:#2a1010;
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg:   0 8px 28px rgba(0,0,0,0.5);
+}
+body.dark .canvas-bg {
+  background-image:
+    linear-gradient(#2a2a2a 1px, transparent 1px),
+    linear-gradient(90deg, #2a2a2a 1px, transparent 1px);
+}
+body.dark .view-tab.active { background: #2e2e2e; }
+body.dark .data-table tr:hover td { background: #252525; }
+body.dark .sync-bar { background: #0e1a12; border-color: #0a1209; }
+.dark-toggle {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-mid);
+  transition: all .15s;
+  flex-shrink: 0;
+  font-size: 15px;
+}
+.dark-toggle:hover { border-color: var(--border-mid); color: var(--text); background: var(--bg); }
 </style>
 </head>
 <body>
