@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RootFree — Open Family Tree</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -26,137 +27,171 @@
 body{font-family:'Inter',sans-serif;background:var(--parchment);color:var(--ink);min-height:100vh;overflow:hidden}
 h1,h2,h3{font-family:'Playfair Display',serif}
 
-/* ── PRIVACY BAR ── */
+/* PRIVACY BAR */
 .privacy-bar{background:var(--green-deep);color:rgba(255,255,255,.7);text-align:center;font-size:11px;padding:5px 12px;letter-spacing:.3px;flex-shrink:0}
 .privacy-bar span{color:var(--green-light)}
 
-/* ── HEADER ── */
-.header{background:var(--green-deep);color:var(--white);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--accent);flex-shrink:0;gap:12px;flex-wrap:wrap}
-.logo{display:flex;align-items:center;gap:10px}
-.logo svg{width:26px;height:26px;flex-shrink:0}
-.logo h1{font-size:19px;color:var(--white);letter-spacing:.5px;white-space:nowrap}
-.logo span{color:var(--green-light);font-size:12px;font-family:'Inter',sans-serif;font-weight:400;margin-left:2px}
-.header-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.view-tabs{display:flex;gap:4px;background:rgba(255,255,255,.1);padding:4px;border-radius:8px}
-.view-tab{padding:5px 12px;border-radius:5px;border:none;cursor:pointer;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;color:rgba(255,255,255,.65);background:transparent;transition:all .15s}
+/* HEADER */
+.header{background:var(--green-deep);color:var(--white);padding:11px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--accent);flex-shrink:0;gap:10px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px}
+.logo svg{width:24px;height:24px;flex-shrink:0}
+.logo h1{font-size:18px;color:var(--white);letter-spacing:.5px;white-space:nowrap}
+.logo span{color:var(--green-light);font-size:11px;font-family:'Inter',sans-serif;font-weight:400;margin-left:2px}
+.header-actions{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.view-tabs{display:flex;gap:3px;background:rgba(255,255,255,.1);padding:3px;border-radius:8px}
+.view-tab{padding:5px 11px;border-radius:5px;border:none;cursor:pointer;font-size:11px;font-weight:500;font-family:'Inter',sans-serif;color:rgba(255,255,255,.65);background:transparent;transition:all .15s}
 .view-tab.active{background:var(--green-light);color:var(--green-deep)}
-.btn{padding:7px 14px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
+.btn{padding:6px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:500;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
 .btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,.3);color:var(--white)}
 .btn-outline:hover{background:rgba(255,255,255,.1)}
 .btn-danger{background:var(--danger);color:white}
 .btn-danger:hover{background:#a93226}
 .btn-primary{background:var(--green-light);color:var(--green-deep);font-weight:600}
 .btn-primary:hover{background:#3fa070}
+.btn-share{background:var(--accent);color:white;font-weight:600;display:flex;align-items:center;gap:5px}
+.btn-share:hover{background:#b07a28}
 
-/* ── LAYOUT ── */
+/* SYNC STATUS BAR */
+.sync-bar{display:none;background:#1a2d3a;color:white;padding:6px 18px;font-size:12px;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.sync-bar.visible{display:flex}
+.sync-status{display:flex;align-items:center;gap:8px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#52b788;animation:pulse 2s infinite}
+.sync-dot.connecting{background:var(--accent);animation:pulse 1s infinite}
+.sync-dot.disconnected{background:var(--danger);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-peers{display:flex;gap:6px;align-items:center}
+.peer-avatar{width:22px;height:22px;border-radius:50%;background:var(--green-light);color:var(--green-deep);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.sync-mode-badge{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:rgba(255,255,255,.1)}
+.sync-mode-badge.edit{background:rgba(82,183,136,.25);color:#52b788}
+.sync-mode-badge.view{background:rgba(200,150,60,.25);color:var(--accent)}
+.btn-stop-sync{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:'Inter',sans-serif}
+.btn-stop-sync:hover{background:rgba(255,255,255,.1);color:white}
+
+/* LAYOUT */
 .app{display:flex;flex-direction:column;height:100vh}
 .canvas-wrap{position:relative;flex:1;overflow:auto;background:var(--parchment)}
 .canvas-wrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(var(--parchment-dark) 1px,transparent 1px);background-size:32px 32px;opacity:.5;pointer-events:none;z-index:0}
 #tree-canvas{position:relative;min-width:100%;min-height:100%;z-index:1}
 
-/* ── PERSON CARD ── */
-.person-card{position:absolute;width:170px;background:white;border:1.5px solid var(--parchment-dark);border-radius:12px;box-shadow:0 2px 10px var(--shadow);cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;z-index:10}
+/* PERSON CARD */
+.person-card{position:absolute;width:168px;background:white;border:1.5px solid var(--parchment-dark);border-radius:12px;box-shadow:0 2px 10px var(--shadow);cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;z-index:10}
 .person-card:hover{box-shadow:0 5px 20px var(--shadow-md);transform:translateY(-1px)}
-.person-card.selected{border-color:var(--green-light);box-shadow:0 0 0 3px rgba(82,183,136,.25)}
-.person-card.dragging{opacity:.88;transform:scale(1.03);z-index:200;cursor:grabbing;box-shadow:0 8px 30px var(--shadow-md)}
-.card-photo{width:100%;height:90px;border-radius:10px 10px 0 0;object-fit:cover;display:block;background:var(--parchment-dark)}
-.card-photo-placeholder{width:100%;height:90px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--parchment-dark),var(--parchment))}
-.card-header{padding:8px 10px 4px;display:flex;align-items:center;gap:7px}
-.card-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px;flex-shrink:0}
+.person-card.dragging{opacity:.88;transform:scale(1.03);z-index:200;cursor:grabbing}
+.person-card.remote-editing{border-color:var(--accent);box-shadow:0 0 0 2px rgba(200,150,60,.3)}
+.card-photo{width:100%;height:88px;border-radius:10px 10px 0 0;object-fit:cover;display:block}
+.card-photo-placeholder{width:100%;height:88px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;font-size:30px}
+.card-header{padding:7px 10px 3px;display:flex;align-items:center;gap:7px}
+.card-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:10px;flex-shrink:0}
 .card-avatar.male{background:#d4ede0;color:var(--green-mid)}
 .card-avatar.female{background:#e9d9f7;color:var(--purple)}
 .card-avatar.unknown,.card-avatar.other{background:#f0e8d8;color:var(--ink-light)}
-.card-name{font-size:12px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
+.card-name{font-size:11px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
 .card-sub{font-size:10px;color:var(--ink-light)}
-.card-body{padding:2px 10px 6px}
+.card-body{padding:2px 10px 5px}
 .card-detail{font-size:10px;color:var(--ink-light);line-height:1.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card-actions{display:flex;gap:4px;padding:0 8px 8px}
+.card-actions{display:flex;gap:3px;padding:0 7px 7px}
 .card-btn{flex:1;padding:4px 2px;border-radius:5px;border:1px solid var(--parchment-dark);background:var(--parchment);color:var(--ink-light);font-size:10px;cursor:pointer;font-family:'Inter',sans-serif;text-align:center;transition:background .12s;font-weight:500}
-.card-btn:hover{background:var(--parchment-dark);color:var(--ink)}
+.card-btn:hover{background:var(--parchment-dark)}
 .card-btn.primary{background:var(--green-light);border-color:var(--green-light);color:var(--green-deep);font-weight:600}
 .card-btn.primary:hover{background:#3fa070}
+.card-btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* ── SVG LAYER ── */
+/* SVG */
 #connector-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:5}
 
-/* ── TOOLBAR ── */
-.toolbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green-deep);border-radius:50px;padding:9px 18px;display:flex;gap:10px;align-items:center;box-shadow:0 4px 24px rgba(0,0,0,.28);z-index:50}
-.tb-btn{background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:5px 11px;border-radius:30px;font-size:12px;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s;white-space:nowrap}
+/* TOOLBAR */
+.toolbar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--green-deep);border-radius:50px;padding:8px 16px;display:flex;gap:8px;align-items:center;box-shadow:0 4px 24px rgba(0,0,0,.28);z-index:50}
+.tb-btn{background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:5px 10px;border-radius:30px;font-size:11px;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s;white-space:nowrap}
 .tb-btn:hover{background:rgba(255,255,255,.12);color:white}
-.tb-sep{width:1px;height:18px;background:rgba(255,255,255,.2)}
+.tb-sep{width:1px;height:16px;background:rgba(255,255,255,.2)}
 
-/* ── MODAL ── */
+/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{background:white;border-radius:14px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
-.modal-header{background:var(--green-deep);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.modal-header h2{color:white;font-size:16px}
-.modal-close{background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:20px;line-height:1;padding:0 4px}
-.modal-body{padding:18px;overflow-y:auto;flex:1}
-.form-group{margin-bottom:12px}
+.modal{background:white;border-radius:14px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
+.modal-header{background:var(--green-deep);padding:13px 17px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-header h2{color:white;font-size:15px}
+.modal-close{background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:19px;line-height:1;padding:0 3px}
+.modal-body{padding:16px;overflow-y:auto;flex:1}
+.form-group{margin-bottom:11px}
 .form-group label{display:block;font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 11px;border:1.5px solid var(--parchment-dark);border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;background:var(--parchment);color:var(--ink);outline:none;transition:border-color .15s}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1.5px solid var(--parchment-dark);border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;background:var(--parchment);color:var(--ink);outline:none;transition:border-color .15s}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--green-light)}
-.form-group textarea{resize:vertical;min-height:60px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.modal-footer{padding:10px 18px;border-top:1px solid var(--parchment-dark);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
-.btn-sm{padding:6px 14px;border-radius:6px;border:1.5px solid var(--parchment-dark);background:var(--parchment);color:var(--ink-light);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500}
+.form-group textarea{resize:vertical;min-height:55px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.modal-footer{padding:10px 16px;border-top:1px solid var(--parchment-dark);display:flex;gap:7px;justify-content:flex-end;flex-shrink:0}
+.btn-sm{padding:6px 13px;border-radius:6px;border:1.5px solid var(--parchment-dark);background:var(--parchment);color:var(--ink-light);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500}
 .btn-sm:hover{background:var(--parchment-dark)}
 
-/* ── PHOTO UPLOAD ── */
-.photo-upload-area{border:2px dashed var(--parchment-dark);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+/* PHOTO */
+.photo-upload-area{border:2px dashed var(--parchment-dark);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
 .photo-upload-area:hover{border-color:var(--green-light);background:rgba(82,183,136,.05)}
-.photo-upload-area img{width:100%;max-height:160px;object-fit:cover;border-radius:7px;display:block;margin-bottom:8px}
+.photo-upload-area img{width:100%;max-height:150px;object-fit:cover;border-radius:7px;display:block;margin-bottom:7px}
 .photo-upload-hint{font-size:12px;color:var(--ink-light)}
 .photo-upload-hint strong{color:var(--green-mid)}
 #photo-file-input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-/* ── RELATIONSHIP MODAL ── */
-.rel-options{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.rel-option{padding:9px;border:1.5px solid var(--parchment-dark);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:500;transition:all .15s;background:var(--parchment)}
+/* REL MODAL */
+.rel-options{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rel-option{padding:8px;border:1.5px solid var(--parchment-dark);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:500;transition:all .15s;background:var(--parchment)}
 .rel-option:hover{border-color:var(--green-light)}
 .rel-option.selected{border-color:var(--green-light);background:rgba(82,183,136,.12);color:var(--green-mid)}
-.rel-icon{font-size:18px;margin-bottom:3px;display:block}
-.person-list{max-height:180px;overflow-y:auto;border:1.5px solid var(--parchment-dark);border-radius:8px}
-.person-item{padding:9px 11px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:background .12s;border-bottom:1px solid var(--parchment-dark)}
+.rel-icon{font-size:17px;margin-bottom:3px;display:block}
+.person-list{max-height:170px;overflow-y:auto;border:1.5px solid var(--parchment-dark);border-radius:8px}
+.person-item{padding:8px 10px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:7px;transition:background .12s;border-bottom:1px solid var(--parchment-dark)}
 .person-item:last-child{border-bottom:none}
 .person-item:hover{background:rgba(82,183,136,.08)}
 .person-item.sel{background:rgba(82,183,136,.14)}
-.person-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.person-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
-/* ── VIEW DETAIL ── */
-.detail-photo{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:14px;display:block}
-.detail-grid{display:grid;grid-template-columns:100px 1fr;gap:5px 12px;font-size:13px}
+/* DETAIL */
+.detail-photo{width:100%;max-height:190px;object-fit:cover;border-radius:8px;margin-bottom:13px;display:block}
+.detail-grid{display:grid;grid-template-columns:95px 1fr;gap:5px 10px;font-size:13px}
 .detail-label{color:var(--ink-light);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding-top:2px}
-.detail-val{color:var(--ink)}
-.rels-list{list-style:none;padding:0;margin-top:6px}
+.rels-list{list-style:none;padding:0;margin-top:5px}
 .rels-list li{font-size:12px;padding:4px 0;border-bottom:1px solid var(--parchment-dark);display:flex;align-items:center;gap:6px}
 .rels-list li:last-child{border-bottom:none}
 .rel-badge{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--parchment-dark);color:var(--ink-light);text-transform:capitalize}
 
-/* ── WELCOME ── */
+/* SHARE MODAL */
+.share-link-box{background:var(--parchment);border:1.5px solid var(--parchment-dark);border-radius:8px;padding:10px 12px;font-size:12px;font-family:monospace;word-break:break-all;color:var(--green-mid);margin:8px 0;line-height:1.5}
+.share-mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.share-mode-btn{padding:10px;border:1.5px solid var(--parchment-dark);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:500;background:var(--parchment);transition:all .15s;font-family:'Inter',sans-serif}
+.share-mode-btn:hover{border-color:var(--green-light)}
+.share-mode-btn.selected{border-color:var(--green-light);background:rgba(82,183,136,.12);color:var(--green-mid)}
+.share-mode-icon{font-size:20px;margin-bottom:4px;display:block}
+.info-box{background:rgba(82,183,136,.08);border:1px solid rgba(82,183,136,.25);border-radius:8px;padding:9px 11px;font-size:12px;color:var(--green-mid);line-height:1.6;margin-bottom:12px}
+.warning-box{background:rgba(200,150,60,.08);border:1px solid rgba(200,150,60,.3);border-radius:8px;padding:9px 11px;font-size:12px;color:#8a6020;line-height:1.6;margin-bottom:12px}
+
+/* WELCOME */
 .welcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.85}
-.welcome h2{font-size:22px;color:var(--green-mid);margin-bottom:8px}
+.welcome h2{font-size:21px;color:var(--green-mid);margin-bottom:7px}
 .welcome p{font-size:13px;color:var(--ink-light);max-width:260px;margin:0 auto}
-.welcome-tree{font-size:60px;margin-bottom:10px;display:block}
+.welcome-tree{font-size:56px;margin-bottom:9px;display:block}
 
-/* ── LEGEND ── */
-.legend{position:fixed;top:108px;right:14px;background:white;border:1px solid var(--parchment-dark);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--ink-light);z-index:50}
-.legend-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+/* LEGEND */
+.legend{position:fixed;top:auto;bottom:70px;right:14px;background:white;border:1px solid var(--parchment-dark);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--ink-light);z-index:50}
+.legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
 .legend-row:last-child{margin-bottom:0}
-.legend-line{height:2px;width:20px;border-radius:1px}
+.legend-line{height:2px;width:18px;border-radius:1px}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--green-deep);color:white;padding:9px 18px;border-radius:30px;font-size:12px;font-weight:500;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+/* TOAST */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--green-deep);color:white;padding:8px 16px;border-radius:30px;font-size:12px;font-weight:500;z-index:600;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 
-/* ── GEDCOM info ── */
-.info-box{background:rgba(82,183,136,.08);border:1px solid rgba(82,183,136,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green-mid);line-height:1.6;margin-bottom:14px}
+/* JOIN BANNER */
+.join-banner{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,58,42,.97);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.join-banner.visible{display:flex}
+.join-card{background:white;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center}
+.join-card h2{font-size:22px;color:var(--green-mid);margin-bottom:8px}
+.join-card p{font-size:13px;color:var(--ink-light);line-height:1.6;margin-bottom:16px}
+.join-spinner{width:40px;height:40px;border:3px solid var(--parchment-dark);border-top-color:var(--green-light);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div class="app">
 
-<div class="privacy-bar">🔒 <span>100% private</span> · All data in your browser only · No accounts · No cloud · <span>One-click delete</span></div>
+<div class="privacy-bar">🔒 <span>Privacy-first</span> · Solo mode: data never leaves your browser · Shared mode: peer-to-peer only, no server sees your data</div>
 
 <div class="header">
   <div class="logo">
@@ -171,19 +206,33 @@ h1,h2,h3{font-family:'Playfair Display',serif}
       <circle cx="22" cy="13" r="2" fill="#3fa070"/>
       <path d="M14 26 L14 22" stroke="#52b788" stroke-width="2.5" stroke-linecap="round"/>
     </svg>
-    <h1>RootFree <span>v2</span></h1>
+    <h1>RootFree <span>v3</span></h1>
   </div>
   <div class="view-tabs">
     <button class="view-tab active" id="tab-canvas" onclick="switchView('canvas')">🌿 Tree</button>
-    <button class="view-tab" id="tab-gen" onclick="switchView('gen')">📊 Generations</button>
+    <button class="view-tab" id="tab-gen" onclick="switchView('gen')">📊 Gens</button>
     <button class="view-tab" id="tab-list" onclick="switchView('list')">📋 List</button>
   </div>
   <div class="header-actions">
+    <button class="btn btn-share" onclick="openShareModal()">🔗 Share Tree</button>
     <button class="btn btn-outline" onclick="openGedcomImport()">📥 GEDCOM</button>
     <button class="btn btn-outline" onclick="exportGedcom()">📤 GEDCOM</button>
     <button class="btn btn-outline" onclick="exportJson()">💾 Backup</button>
     <button class="btn btn-outline" onclick="importJson()">📂 Restore</button>
     <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑 Delete All</button>
+  </div>
+</div>
+
+<!-- SYNC BAR -->
+<div class="sync-bar" id="sync-bar">
+  <div class="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-status-text">Connecting…</span>
+    <div class="sync-peers" id="sync-peers"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="sync-mode-badge" id="sync-mode-badge"></span>
+    <button class="btn-stop-sync" onclick="stopSession()">✕ End session</button>
   </div>
 </div>
 
@@ -193,7 +242,7 @@ h1,h2,h3{font-family:'Playfair Display',serif}
     <div class="welcome" id="welcome-msg">
       <span class="welcome-tree">🌳</span>
       <h2>Your family tree starts here</h2>
-      <p>Click "+ Add Person" below to begin — no sign-up, no cloud</p>
+      <p>Click "+ Add Person" below — no sign-up, no cloud</p>
     </div>
     <svg id="connector-svg"></svg>
   </div>
@@ -201,7 +250,7 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 
 <!-- GENERATION VIEW -->
 <div class="canvas-wrap" id="view-gen" style="display:none">
-  <div id="gen-canvas" style="position:relative;padding:30px 40px;min-height:100%">
+  <div id="gen-canvas" style="position:relative;padding:28px 36px;min-height:100%">
     <svg id="gen-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0"></svg>
     <div id="gen-content" style="position:relative;z-index:1"></div>
   </div>
@@ -209,16 +258,16 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 
 <!-- LIST VIEW -->
 <div class="canvas-wrap" id="view-list" style="display:none;overflow-y:auto">
-  <div id="list-content" style="padding:30px 40px;max-width:800px;margin:0 auto"></div>
+  <div id="list-content" style="padding:28px 36px;max-width:780px;margin:0 auto"></div>
 </div>
 
-</div><!-- end .app -->
+</div>
 
 <!-- TOOLBAR -->
 <div class="toolbar" id="main-toolbar">
-  <button class="tb-btn" onclick="openAddPerson()">＋ Add Person</button>
+  <button class="tb-btn" onclick="openAddPerson()" id="tb-add">＋ Add Person</button>
   <div class="tb-sep"></div>
-  <button class="tb-btn" id="layout-btn" onclick="genLayout()">⊞ Gen Layout</button>
+  <button class="tb-btn" onclick="genLayout()">⊞ Gen Layout</button>
   <button class="tb-btn" onclick="gridLayout()">⊟ Grid</button>
   <div class="tb-sep"></div>
   <button class="tb-btn" onclick="zoomIn()">＋</button>
@@ -227,8 +276,8 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 </div>
 
 <!-- LEGEND -->
-<div class="legend" id="main-legend">
-  <div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:7px">Connections</div>
+<div class="legend">
+  <div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:6px">Connections</div>
   <div class="legend-row"><div class="legend-line" style="background:#2d6a4f"></div><span>Parent/Child</span></div>
   <div class="legend-row"><div class="legend-line" style="background:#c8963c"></div><span>Partner</span></div>
   <div class="legend-row"><div class="legend-line" style="background:#6b4fa0"></div><span>Sibling</span></div>
@@ -237,11 +286,21 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════════════
-     MODALS
-══════════════════════════════════════ -->
+<!-- JOIN BANNER -->
+<div class="join-banner" id="join-banner">
+  <div class="join-card">
+    <div class="join-spinner" id="join-spinner"></div>
+    <h2 id="join-title">Joining tree…</h2>
+    <p id="join-desc">Connecting peer-to-peer. No server sees your family data.</p>
+    <div id="join-actions" style="display:none;margin-top:8px">
+      <button class="btn btn-primary" style="width:100%;padding:10px" onclick="dismissJoin()">View Tree</button>
+    </div>
+  </div>
+</div>
 
-<!-- ADD / EDIT PERSON -->
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- ADD/EDIT PERSON -->
 <div class="modal-overlay" id="modal-add" style="display:none">
   <div class="modal">
     <div class="modal-header">
@@ -249,64 +308,29 @@ h1,h2,h3{font-family:'Playfair Display',serif}
       <button class="modal-close" onclick="closeModal('modal-add')">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Photo -->
       <div class="form-group">
         <label>Photo</label>
         <div class="photo-upload-area" id="photo-upload-area" onclick="triggerPhotoUpload()">
           <input type="file" id="photo-file-input" accept="image/*" onchange="handlePhotoUpload(event)">
           <img id="photo-preview" style="display:none" alt="Preview">
-          <div id="photo-placeholder">
-            <div style="font-size:36px;margin-bottom:6px">📷</div>
-            <div class="photo-upload-hint">Click to <strong>upload a photo</strong><br>JPG, PNG, WebP — stored locally</div>
-          </div>
-          <div id="photo-remove-wrap" style="display:none;margin-top:6px">
-            <button onclick="removePhoto(event)" style="font-size:11px;color:var(--danger);background:none;border:none;cursor:pointer;font-family:inherit">✕ Remove photo</button>
-          </div>
+          <div id="photo-placeholder"><div style="font-size:32px;margin-bottom:5px">📷</div><div class="photo-upload-hint">Click to <strong>upload a photo</strong></div></div>
+          <div id="photo-remove-wrap" style="display:none;margin-top:5px"><button onclick="removePhoto(event)" style="font-size:11px;color:var(--danger);background:none;border:none;cursor:pointer;font-family:inherit">✕ Remove photo</button></div>
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>First Name *</label>
-          <input id="f-first" placeholder="First name">
-        </div>
-        <div class="form-group">
-          <label>Last Name</label>
-          <input id="f-last" placeholder="Last name">
-        </div>
+        <div class="form-group"><label>First Name *</label><input id="f-first" placeholder="First name"></div>
+        <div class="form-group"><label>Last Name</label><input id="f-last" placeholder="Last name"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Birth Year</label>
-          <input id="f-birth" placeholder="e.g. 1945" type="number" min="1" max="2100">
-        </div>
-        <div class="form-group">
-          <label>Death Year</label>
-          <input id="f-death" placeholder="Leave blank if living" type="number" min="1" max="2100">
-        </div>
+        <div class="form-group"><label>Birth Year</label><input id="f-birth" placeholder="e.g. 1945" type="number"></div>
+        <div class="form-group"><label>Death Year</label><input id="f-death" placeholder="If applicable" type="number"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Gender</label>
-          <select id="f-gender">
-            <option value="unknown">Unknown</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other / Non-binary</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Birthplace</label>
-          <input id="f-place" placeholder="City, Country">
-        </div>
+        <div class="form-group"><label>Gender</label><select id="f-gender"><option value="unknown">Unknown</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+        <div class="form-group"><label>Birthplace</label><input id="f-place" placeholder="City, Country"></div>
       </div>
-      <div class="form-group">
-        <label>Occupation</label>
-        <input id="f-occ" placeholder="e.g. Teacher, Farmer">
-      </div>
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="f-notes" placeholder="Any additional notes…"></textarea>
-      </div>
+      <div class="form-group"><label>Occupation</label><input id="f-occ" placeholder="e.g. Teacher, Farmer"></div>
+      <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="Any additional notes…"></textarea></div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm" onclick="closeModal('modal-add')">Cancel</button>
@@ -318,10 +342,7 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 <!-- ADD RELATIONSHIP -->
 <div class="modal-overlay" id="modal-rel" style="display:none">
   <div class="modal">
-    <div class="modal-header">
-      <h2>Add Relationship</h2>
-      <button class="modal-close" onclick="closeModal('modal-rel')">✕</button>
-    </div>
+    <div class="modal-header"><h2>Add Relationship</h2><button class="modal-close" onclick="closeModal('modal-rel')">✕</button></div>
     <div class="modal-body">
       <div class="form-group">
         <label>Relationship type</label>
@@ -332,10 +353,7 @@ h1,h2,h3{font-family:'Playfair Display',serif}
           <div class="rel-option" data-rel="sibling" onclick="selectRelType(this)"><span class="rel-icon">🤝</span>Sibling of</div>
         </div>
       </div>
-      <div class="form-group">
-        <label>Connect to</label>
-        <div class="person-list" id="person-pick-list"></div>
-      </div>
+      <div class="form-group"><label>Connect to</label><div class="person-list" id="person-pick-list"></div></div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm" onclick="closeModal('modal-rel')">Cancel</button>
@@ -344,13 +362,10 @@ h1,h2,h3{font-family:'Playfair Display',serif}
   </div>
 </div>
 
-<!-- VIEW / DETAIL -->
+<!-- VIEW DETAIL -->
 <div class="modal-overlay" id="modal-view" style="display:none">
   <div class="modal">
-    <div class="modal-header" id="view-header">
-      <h2 id="view-name">Person</h2>
-      <button class="modal-close" onclick="closeModal('modal-view')">✕</button>
-    </div>
+    <div class="modal-header" id="view-header"><h2 id="view-name">Person</h2><button class="modal-close" onclick="closeModal('modal-view')">✕</button></div>
     <div class="modal-body" id="view-body"></div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="view-delete-btn">Delete</button>
@@ -360,20 +375,17 @@ h1,h2,h3{font-family:'Playfair Display',serif}
   </div>
 </div>
 
-<!-- DELETE ALL CONFIRM -->
+<!-- DELETE ALL -->
 <div class="modal-overlay" id="modal-delete" style="display:none">
   <div class="modal">
-    <div class="modal-header" style="background:var(--danger)">
-      <h2>Delete All Data</h2>
-      <button class="modal-close" onclick="closeModal('modal-delete')">✕</button>
-    </div>
+    <div class="modal-header" style="background:var(--danger)"><h2>Delete All Data</h2><button class="modal-close" onclick="closeModal('modal-delete')">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:14px;line-height:1.6;margin-bottom:10px">This will <strong>permanently erase</strong> all people, photos, relationships, and notes. This cannot be undone.</p>
+      <p style="font-size:13px;line-height:1.6;margin-bottom:10px">This will <strong>permanently erase</strong> all people, photos, relationships, and notes. Cannot be undone.</p>
       <p style="font-size:12px;color:var(--ink-light)">Export a backup first if you want to keep your data.</p>
     </div>
     <div class="modal-footer">
       <button class="btn-sm" onclick="closeModal('modal-delete')">Cancel</button>
-      <button class="btn btn-outline" style="color:var(--ink-light);border-color:var(--parchment-dark)" onclick="exportJson();closeModal('modal-delete')">Export first</button>
+      <button class="btn-sm" onclick="exportJson();closeModal('modal-delete')">Export first</button>
       <button class="btn btn-danger" onclick="deleteAllData()">Delete Everything</button>
     </div>
   </div>
@@ -382,21 +394,11 @@ h1,h2,h3{font-family:'Playfair Display',serif}
 <!-- GEDCOM IMPORT -->
 <div class="modal-overlay" id="modal-gedcom" style="display:none">
   <div class="modal">
-    <div class="modal-header">
-      <h2>Import GEDCOM File</h2>
-      <button class="modal-close" onclick="closeModal('modal-gedcom')">✕</button>
-    </div>
+    <div class="modal-header"><h2>Import GEDCOM</h2><button class="modal-close" onclick="closeModal('modal-gedcom')">✕</button></div>
     <div class="modal-body">
-      <div class="info-box">
-        GEDCOM (.ged) is the universal family tree format used by Ancestry, MyHeritage, FamilySearch, and most genealogy apps. Export from any of those, then import here.
-      </div>
-      <div class="form-group">
-        <label>Select .ged file</label>
-        <input type="file" id="gedcom-file" accept=".ged,.GED,.gedcom" style="background:white">
-      </div>
-      <div id="gedcom-preview" style="display:none;margin-top:10px">
-        <div style="font-size:12px;color:var(--green-mid);font-weight:600" id="gedcom-preview-text"></div>
-      </div>
+      <div class="info-box">GEDCOM (.ged) is the universal family tree format used by Ancestry, MyHeritage, FamilySearch and most genealogy apps.</div>
+      <div class="form-group"><label>Select .ged file</label><input type="file" id="gedcom-file" accept=".ged,.GED,.gedcom" style="background:white"></div>
+      <div id="gedcom-preview" style="display:none;margin-top:8px;font-size:12px;color:var(--green-mid);font-weight:600" id="gedcom-preview-text"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-sm" onclick="closeModal('modal-gedcom')">Cancel</button>
@@ -405,77 +407,294 @@ h1,h2,h3{font-family:'Playfair Display',serif}
   </div>
 </div>
 
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="modal-share" style="display:none">
+  <div class="modal">
+    <div class="modal-header" style="background:#1a2d3a"><h2>🔗 Share Your Tree</h2><button class="modal-close" onclick="closeModal('modal-share')">✕</button></div>
+    <div class="modal-body">
+      <div class="info-box">
+        🔒 <strong>Peer-to-peer encrypted.</strong> Your family data travels directly between browsers — no server ever sees it. The session ends when everyone closes the tab.
+      </div>
+      <div class="form-group">
+        <label>What can people with this link do?</label>
+        <div class="share-mode-toggle">
+          <button class="share-mode-btn selected" id="mode-edit-btn" onclick="selectShareMode('edit')"><span class="share-mode-icon">✏️</span><strong>Edit</strong><div style="font-size:10px;color:var(--ink-light);margin-top:2px">Can add & change people</div></button>
+          <button class="share-mode-btn" id="mode-view-btn" onclick="selectShareMode('view')"><span class="share-mode-icon">👁</span><strong>View only</strong><div style="font-size:10px;color:var(--ink-light);margin-top:2px">Can see but not change</div></button>
+        </div>
+      </div>
+      <div id="share-link-section" style="display:none">
+        <div class="form-group">
+          <label>Share this link</label>
+          <div class="share-link-box" id="share-link-display"></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="copyShareLink()">📋 Copy Link</button>
+        </div>
+        <div class="warning-box">⚠️ Anyone with this link can <span id="share-mode-warning">edit</span> your tree while the session is active. Share it only with trusted family members.</div>
+      </div>
+      <div id="share-generate-section">
+        <button class="btn btn-primary" style="width:100%;padding:10px;font-size:13px" onclick="startSession()">Generate Share Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // STATE
-// ══════════════════════════════════════════
-const STORE_KEY='rootfree_v2';
+// ══════════════════════════════════════════════════
+const STORE_KEY='rootfree_v3';
 let state={people:{},relationships:[],nextId:1};
 let editingId=null,relSourceId=null,selectedRelType='parent',selectedPickId=null;
-let currentPhoto=null; // base64
-let currentView='canvas';
-let currentZoom=1;
+let currentPhoto=null,currentZoom=1;
 
-// ── PERSIST ──
-function loadState(){
-  try{const d=localStorage.getItem(STORE_KEY);if(d)state=JSON.parse(d);}catch(e){}
-  render();
+// ══════════════════════════════════════════════════
+// P2P / WEBRTC (PeerJS)
+// ══════════════════════════════════════════════════
+let peer=null;          // our PeerJS instance
+let connections=[];     // active DataConnections
+let sessionId=null;     // the room ID (= host peer ID)
+let isHost=false;
+let shareMode='edit';   // 'edit' or 'view'
+let peerNames={};       // connId -> emoji name
+
+const EMOJIS=['🦁','🐺','🦊','🐻','🦋','🌻','🌊','⭐','🍀','🔥'];
+function randEmoji(){return EMOJIS[Math.floor(Math.random()*EMOJIS.length)];}
+
+// ── Start hosting a session ──
+function startSession(){
+  document.getElementById('share-generate-section').style.display='none';
+  isHost=true;
+  peer=new Peer(undefined,{debug:0});
+  peer.on('open',id=>{
+    sessionId=id;
+    const link=buildShareLink(id,shareMode);
+    document.getElementById('share-link-display').textContent=link;
+    document.getElementById('share-link-section').style.display='block';
+    showSyncBar('Waiting for guests…','connecting');
+  });
+  peer.on('connection',conn=>handleIncomingConn(conn));
+  peer.on('error',e=>showToast('P2P error: '+e.type));
 }
-function saveState(){
-  try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){
-    showToast('⚠️ Storage full — consider exporting & trimming photos');
+
+function buildShareLink(id,mode){
+  return window.location.href.split('?')[0]+'?join='+id+'&mode='+mode;
+}
+
+function handleIncomingConn(conn){
+  const emoji=randEmoji();
+  peerNames[conn.peer]=emoji;
+  conn.on('open',()=>{
+    connections.push(conn);
+    // Send full state to new joiner
+    conn.send({type:'FULL_STATE',state,shareMode});
+    updateSyncBar();
+    showToast(emoji+' joined the tree');
+  });
+  conn.on('data',msg=>handleMessage(msg,conn));
+  conn.on('close',()=>{
+    connections=connections.filter(c=>c!==conn);
+    updateSyncBar();
+    showToast(peerNames[conn.peer]||'Someone'+' left');
+  });
+}
+
+// ── Join an existing session ──
+function joinSession(hostId,mode){
+  shareMode=mode;
+  showJoinBanner('Connecting to tree…','Establishing peer-to-peer connection — no server sees your data.');
+  peer=new Peer(undefined,{debug:0});
+  peer.on('open',()=>{
+    const conn=peer.connect(hostId,{reliable:true});
+    conn.on('open',()=>{
+      connections.push(conn);
+      conn.on('data',msg=>handleMessage(msg,conn));
+      conn.on('close',()=>{
+        connections=connections.filter(c=>c!==conn);
+        showSyncBar('Host disconnected — your local copy is saved','disconnected');
+        showToast('Session ended — tree saved locally');
+      });
+    });
+    conn.on('error',e=>showToast('Connection error: '+e.type));
+  });
+  peer.on('error',e=>{
+    showJoinBanner('Could not connect','The session may have ended or the link is invalid.',true);
+  });
+}
+
+// ── Message handler ──
+function handleMessage(msg,fromConn){
+  if(msg.type==='FULL_STATE'){
+    state=msg.state;
+    shareMode=msg.shareMode;
+    saveState();render();
+    const canEdit=shareMode==='edit';
+    showSyncBar(canEdit?'Connected — you can edit':'Connected — view only',canEdit?'connected':'view');
+    updateSyncBar();
+    updateEditAccess();
+    hideJoinBanner();
+    showToast('🌳 Tree loaded!');
+  }
+  else if(msg.type==='STATE_UPDATE'){
+    if(shareMode==='view'&&!isHost)return; // guests can't push anyway but guard
+    state=msg.state;
+    saveState();render();
+    if(currentView==='gen')renderGenView();
+    if(currentView==='list')renderListView();
+  }
+  else if(msg.type==='PING'){
+    fromConn.send({type:'PONG'});
   }
 }
 
-// ── HELPERS ──
+// ── Broadcast state to all peers ──
+function broadcast(exceptConn=null){
+  const msg={type:'STATE_UPDATE',state};
+  connections.forEach(c=>{if(c!==exceptConn&&c.open)c.send(msg);});
+}
+
+// ── Stop session ──
+function stopSession(){
+  if(peer){peer.destroy();peer=null;}
+  connections=[];sessionId=null;isHost=false;
+  document.getElementById('sync-bar').classList.remove('visible');
+  updateEditAccess();
+  showToast('Session ended — tree saved locally');
+}
+
+// ── Sync bar UI ──
+function showSyncBar(text,status='connected'){
+  const bar=document.getElementById('sync-bar');
+  bar.classList.add('visible');
+  document.getElementById('sync-status-text').textContent=text;
+  const dot=document.getElementById('sync-dot');
+  dot.className='sync-dot'+(status==='connecting'?' connecting':status==='disconnected'?' disconnected':'');
+  const badge=document.getElementById('sync-mode-badge');
+  badge.textContent=shareMode==='edit'?'✏️ Edit mode':'👁 View only';
+  badge.className='sync-mode-badge '+(shareMode==='edit'?'edit':'view');
+}
+
+function updateSyncBar(){
+  const peers=document.getElementById('sync-peers');
+  peers.innerHTML='';
+  Object.values(peerNames).forEach(e=>{
+    const av=document.createElement('div');
+    av.className='peer-avatar';av.textContent=e;av.title='Guest';
+    peers.appendChild(av);
+  });
+  if(connections.length>0){
+    showSyncBar(isHost?`${connections.length} guest${connections.length>1?'s':''} connected`:'Connected','connected');
+  }
+}
+
+function updateEditAccess(){
+  const canEdit=!peer||(isHost)||(shareMode==='edit');
+  document.getElementById('tb-add').disabled=!canEdit;
+  document.getElementById('tb-add').style.opacity=canEdit?'1':'0.4';
+}
+
+// ── Join banner ──
+function showJoinBanner(title,desc,error=false){
+  const b=document.getElementById('join-banner');
+  b.classList.add('visible');
+  document.getElementById('join-title').textContent=title;
+  document.getElementById('join-desc').textContent=desc;
+  document.getElementById('join-spinner').style.display=error?'none':'block';
+  document.getElementById('join-actions').style.display=error?'flex':'none';
+}
+function hideJoinBanner(){document.getElementById('join-banner').classList.remove('visible');}
+function dismissJoin(){hideJoinBanner();}
+
+// ── Share modal ──
+let selectedShareMode='edit';
+function openShareModal(){
+  document.getElementById('share-link-section').style.display='none';
+  document.getElementById('share-generate-section').style.display='block';
+  document.getElementById('modal-share').style.display='flex';
+  selectShareMode('edit');
+  // If already hosting, show existing link
+  if(sessionId){
+    document.getElementById('share-link-display').textContent=buildShareLink(sessionId,shareMode);
+    document.getElementById('share-link-section').style.display='block';
+    document.getElementById('share-generate-section').style.display='none';
+  }
+}
+function selectShareMode(m){
+  selectedShareMode=m;
+  document.getElementById('mode-edit-btn').classList.toggle('selected',m==='edit');
+  document.getElementById('mode-view-btn').classList.toggle('selected',m==='view');
+  document.getElementById('share-mode-warning').textContent=m==='edit'?'edit':'view';
+  shareMode=m;
+}
+function copyShareLink(){
+  const link=document.getElementById('share-link-display').textContent;
+  navigator.clipboard.writeText(link).then(()=>showToast('✓ Link copied!'));
+}
+
+// ── Check URL for join param on load ──
+function checkJoinParam(){
+  const params=new URLSearchParams(window.location.search);
+  const joinId=params.get('join');
+  const mode=params.get('mode')||'edit';
+  if(joinId){
+    // Clean URL
+    window.history.replaceState({},'',window.location.pathname);
+    joinSession(joinId,mode);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// PERSIST
+// ══════════════════════════════════════════════════
+function loadState(){
+  try{const d=localStorage.getItem(STORE_KEY);if(d)state=JSON.parse(d);}catch(e){}
+  render();checkJoinParam();
+}
+function saveState(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){showToast('⚠️ Storage full');}
+}
+
+// ══════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════
 function initials(p){return((p.first||'?')[0]+(p.last||'')[0]||'').toUpperCase();}
 function gClass(g){return g==='male'?'male':g==='female'?'female':'unknown';}
 function lifespan(p){if(p.birth&&p.death)return p.birth+'–'+p.death;if(p.birth)return 'b. '+p.birth;if(p.death)return 'd. '+p.death;return '';}
-function fullName(p){return ((p.first||'')+(p.last?' '+p.last:'')).trim()||'Unknown';}
+function fullName(p){return((p.first||'')+(p.last?' '+p.last:'')).trim()||'Unknown';}
 function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 
-// ── VIEWS ──
+// ══════════════════════════════════════════════════
+// VIEWS
+// ══════════════════════════════════════════════════
 function switchView(v){
   currentView=v;
   ['canvas','gen','list'].forEach(n=>{
-    document.getElementById('view-'+n).style.display=n===v?'block':'none';
+    document.getElementById('view-'+n).style.display=n===v?(n==='list'?'block':'block'):'none';
     document.getElementById('tab-'+n).classList.toggle('active',n===v);
   });
-  const toolbar=document.getElementById('main-toolbar');
-  const legend=document.getElementById('main-legend');
-  toolbar.style.display=v==='canvas'?'flex':'none';
-  legend.style.display=v==='canvas'?'block':'none';
+  document.getElementById('main-toolbar').style.display=v==='canvas'?'flex':'none';
   if(v==='gen')renderGenView();
   if(v==='list')renderListView();
 }
 
-// ══════════════════════════════════════════
-// RENDER — CANVAS VIEW
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// RENDER CANVAS
+// ══════════════════════════════════════════════════
 function render(){
   const canvas=document.getElementById('tree-canvas');
   canvas.querySelectorAll('.person-card').forEach(e=>e.remove());
   const ids=Object.keys(state.people);
   document.getElementById('welcome-msg').style.display=ids.length?'none':'block';
-
   ids.forEach(id=>{
     const p=state.people[id];
     const gc=gClass(p.gender);
     const card=document.createElement('div');
-    card.className='person-card';
-    card.id='card-'+id;
-    card.style.left=(p.x||100)+'px';
-    card.style.top=(p.y||100)+'px';
-
-    let photoHtml='';
-    if(p.photo){
-      photoHtml=`<img class="card-photo" src="${p.photo}" alt="${fullName(p)}">`;
-    } else {
-      photoHtml=`<div class="card-photo-placeholder" style="background:${gc==='female'?'#e9d9f7':gc==='male'?'#d4ede0':'#f0e8d8'}">${gc==='female'?'👩':gc==='male'?'👨':'🧑'}</div>`;
-    }
-
-    card.innerHTML=`
-      ${photoHtml}
+    card.className='person-card';card.id='card-'+id;
+    card.style.left=(p.x||100)+'px';card.style.top=(p.y||100)+'px';
+    const bgc=gc==='female'?'#e9d9f7':gc==='male'?'#d4ede0':'#f0e8d8';
+    const photoHtml=p.photo
+      ?`<img class="card-photo" src="${p.photo}" alt="${fullName(p)}">`
+      :`<div class="card-photo-placeholder" style="background:${bgc}">${gc==='female'?'👩':gc==='male'?'👨':'🧑'}</div>`;
+    const canEdit=!peer||isHost||(shareMode==='edit');
+    card.innerHTML=`${photoHtml}
       <div class="card-header">
         <div class="card-avatar ${gc}">${initials(p)}</div>
         <div><div class="card-name">${fullName(p)}</div><div class="card-sub">${lifespan(p)||'&nbsp;'}</div></div>
@@ -486,15 +705,12 @@ function render(){
       </div>
       <div class="card-actions">
         <button class="card-btn" onclick="viewPerson('${id}')">View</button>
-        <button class="card-btn primary" onclick="openAddRel('${id}')">+ Connect</button>
-      </div>
-    `;
+        <button class="card-btn primary" onclick="openAddRel('${id}')" ${!canEdit?'disabled':''}>+ Connect</button>
+      </div>`;
     makeDraggable(card,id);
     canvas.appendChild(card);
   });
-
-  drawConnectors();
-  updateCanvasSize();
+  drawConnectors();updateCanvasSize();
 }
 
 function updateCanvasSize(){
@@ -504,21 +720,16 @@ function updateCanvasSize(){
   canvas.style.minWidth=maxX+'px';canvas.style.minHeight=maxY+'px';
 }
 
-// ── CONNECTORS ──
 function drawConnectors(){
   const svg=document.getElementById('connector-svg');
-  svg.innerHTML=`<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 2L8 5L2 8" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>`;
-
+  svg.innerHTML='';
   const cols={'parent':'#2d6a4f','child':'#2d6a4f','partner':'#c8963c','sibling':'#6b4fa0'};
   const dashes={'partner':'7 4','sibling':'4 3'};
-  const typeLabel={'parent':'parent','child':'child','partner':'partner','sibling':'sibling'};
-
+  const labels={'parent':'parent','child':'child','partner':'partner','sibling':'sibling'};
   state.relationships.forEach(rel=>{
-    const a=state.people[rel.a],b=state.people[rel.b];
-    if(!a||!b)return;
-    const CARD_W=170,CARD_H=p=>p.photo?218:128;
-    const ax=(a.x||0)+CARD_W/2, ay=(a.y||0)+CARD_H(a)/2;
-    const bx=(b.x||0)+CARD_W/2, by=(b.y||0)+CARD_H(b)/2;
+    const a=state.people[rel.a],b=state.people[rel.b];if(!a||!b)return;
+    const ax=(a.x||0)+84,ay=(a.y||0)+110;
+    const bx=(b.x||0)+84,by=(b.y||0)+110;
     const col=cols[rel.type]||'#888';
     const path=document.createElementNS('http://www.w3.org/2000/svg','path');
     const my=(ay+by)/2;
@@ -527,24 +738,22 @@ function drawConnectors(){
     path.setAttribute('fill','none');path.setAttribute('opacity','0.65');
     if(dashes[rel.type])path.setAttribute('stroke-dasharray',dashes[rel.type]);
     svg.appendChild(path);
-    // mid label
     const lbl=document.createElementNS('http://www.w3.org/2000/svg','text');
     lbl.setAttribute('x',(ax+bx)/2);lbl.setAttribute('y',(ay+by)/2-5);
     lbl.setAttribute('text-anchor','middle');lbl.setAttribute('font-size','10');
     lbl.setAttribute('fill',col);lbl.setAttribute('font-family','Inter,sans-serif');lbl.setAttribute('font-weight','500');
-    lbl.textContent=typeLabel[rel.type]||rel.type;
-    svg.appendChild(lbl);
+    lbl.textContent=labels[rel.type]||rel.type;svg.appendChild(lbl);
   });
 }
 
-// ── DRAG ──
 function makeDraggable(card,id){
   let ox=0,oy=0,moved=false,startX=0,startY=0;
   card.addEventListener('mousedown',e=>{
-    if(e.target.tagName==='BUTTON'||e.target.tagName==='A')return;
+    if(e.target.tagName==='BUTTON')return;
+    const canEdit=!peer||isHost||(shareMode==='edit');
+    if(!canEdit)return;
     e.preventDefault();
     const p=state.people[id];
-    // Account for zoom
     const wrap=document.getElementById('view-canvas');
     const rect=wrap.getBoundingClientRect();
     ox=(e.clientX-rect.left+wrap.scrollLeft)/currentZoom-(p.x||0);
@@ -552,8 +761,7 @@ function makeDraggable(card,id){
     startX=e.clientX;startY=e.clientY;moved=false;
     card.classList.add('dragging');
     const mm=ev=>{
-      const dx=Math.abs(ev.clientX-startX),dy=Math.abs(ev.clientY-startY);
-      if(dx>5||dy>5)moved=true;
+      if(Math.abs(ev.clientX-startX)>5||Math.abs(ev.clientY-startY)>5)moved=true;
       const bnd=wrap.getBoundingClientRect();
       p.x=Math.max(0,(ev.clientX-bnd.left+wrap.scrollLeft)/currentZoom-ox);
       p.y=Math.max(0,(ev.clientY-bnd.top+wrap.scrollTop)/currentZoom-oy);
@@ -562,7 +770,7 @@ function makeDraggable(card,id){
     };
     const mu=()=>{
       card.classList.remove('dragging');
-      if(moved)saveState();
+      if(moved){saveState();broadcast();}
       document.removeEventListener('mousemove',mm);
       document.removeEventListener('mouseup',mu);
     };
@@ -571,29 +779,20 @@ function makeDraggable(card,id){
   });
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // GENERATION VIEW
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function computeGenerations(){
-  // Build adjacency: parent->child
-  const children={};  // parent id -> [child ids]
-  const parents={};   // child id -> [parent ids]
-  const partners={};  // id -> [partner ids]
-  Object.keys(state.people).forEach(id=>{children[id]=[];parents[id]=[];partners[id]=[];});
-
+  const children={},parents={};
+  Object.keys(state.people).forEach(id=>{children[id]=[];parents[id]=[];});
   state.relationships.forEach(rel=>{
     if(rel.type==='parent'){children[rel.a].push(rel.b);parents[rel.b].push(rel.a);}
     else if(rel.type==='child'){children[rel.b].push(rel.a);parents[rel.a].push(rel.b);}
-    else if(rel.type==='partner'){partners[rel.a].push(rel.b);partners[rel.b].push(rel.a);}
   });
-
-  // BFS from roots (no parents) to assign generations
   const gen={};
   const roots=Object.keys(state.people).filter(id=>parents[id].length===0);
-  if(!roots.length)return{gen:{},children,partners,maxGen:0};
-
-  const queue=[...roots];
-  roots.forEach(r=>gen[r]=0);
+  if(!roots.length)return{gen:{},maxGen:0};
+  const queue=[...roots];roots.forEach(r=>gen[r]=0);
   while(queue.length){
     const cur=queue.shift();
     (children[cur]||[]).forEach(ch=>{
@@ -601,131 +800,81 @@ function computeGenerations(){
       else gen[ch]=Math.max(gen[ch],(gen[cur]||0)+1);
     });
   }
-  // Assign remaining (disconnected)
   Object.keys(state.people).forEach(id=>{if(gen[id]===undefined)gen[id]=0;});
-
-  const maxGen=Math.max(0,...Object.values(gen));
-  return{gen,children,partners,maxGen};
+  return{gen,maxGen:Math.max(0,...Object.values(gen))};
 }
 
 function renderGenView(){
-  const {gen,maxGen}=computeGenerations();
+  const{gen,maxGen}=computeGenerations();
   const content=document.getElementById('gen-content');
-  const genSvg=document.getElementById('gen-svg');
-  content.innerHTML='';genSvg.innerHTML='';
-
+  content.innerHTML='';
   if(!Object.keys(state.people).length){
-    content.innerHTML='<div style="text-align:center;color:var(--ink-light);padding:60px 0;font-size:14px">Add people in Tree view to see generations here.</div>';
-    return;
+    content.innerHTML='<div style="text-align:center;color:var(--ink-light);padding:60px 0;font-size:14px">Add people in Tree view first.</div>';return;
   }
-
-  // Group by generation
   const byGen={};
-  Object.keys(state.people).forEach(id=>{
-    const g=gen[id]||0;
-    if(!byGen[g])byGen[g]=[];
-    byGen[g].push(id);
-  });
-
-  const CARD_W=150,CARD_H=160,COL_GAP=24,ROW_GAP=60,PAD=30;
-  const genLabels=['Great-great-grandparents','Great-grandparents','Grandparents','Parents','You / Siblings','Children','Grandchildren','Great-grandchildren'];
-
-  let totalH=PAD;
-  const rowMeta=[];
-
+  Object.keys(state.people).forEach(id=>{const g=gen[id]||0;if(!byGen[g])byGen[g]=[];byGen[g].push(id);});
+  const labels=['Great-great-grandparents','Great-grandparents','Grandparents','Parents','You / Siblings','Children','Grandchildren','Great-grandchildren'];
   for(let g=0;g<=maxGen;g++){
-    const ids=byGen[g]||[];
-    const rowW=ids.length*(CARD_W+COL_GAP)-COL_GAP;
-    rowMeta.push({g,ids,y:totalH,rowW});
-    totalH+=CARD_H+ROW_GAP+(g<=maxGen?0:0);
-  }
-  totalH+=PAD;
-
-  // Render rows
-  rowMeta.forEach(({g,ids,y,rowW})=>{
-    if(!ids.length)return;
-    // Generation label
+    const ids=byGen[g]||[];if(!ids.length)continue;
     const label=document.createElement('div');
-    const genName=genLabels[g]||`Generation ${g+1}`;
-    label.style.cssText=`text-align:center;font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:${g===0?0:ROW_GAP}px`;
-    label.textContent=genName;
+    label.style.cssText=`text-align:center;font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;${g>0?'margin-top:40px':''}`;
+    label.textContent=labels[g]||`Generation ${g+1}`;
     content.appendChild(label);
-
     const row=document.createElement('div');
-    row.style.cssText=`display:flex;gap:${COL_GAP}px;justify-content:center;margin-bottom:0`;
+    row.style.cssText='display:flex;gap:20px;justify-content:center;flex-wrap:wrap';
     ids.forEach(id=>{
-      const p=state.people[id];
-      const gc=gClass(p.gender);
+      const p=state.people[id];const gc=gClass(p.gender);
+      const bgc=gc==='female'?'#e9d9f7':gc==='male'?'#d4ede0':'#f0e8d8';
       const card=document.createElement('div');
-      card.style.cssText=`width:${CARD_W}px;background:white;border:1.5px solid var(--parchment-dark);border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s`;
+      card.style.cssText='width:140px;background:white;border:1.5px solid var(--parchment-dark);border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s';
       card.onmouseenter=()=>{card.style.transform='translateY(-2px)';card.style.boxShadow='0 5px 16px var(--shadow-md)';};
       card.onmouseleave=()=>{card.style.transform='';card.style.boxShadow='';};
       card.onclick=()=>viewPerson(id);
-
-      let photoHtml='';
-      if(p.photo){
-        photoHtml=`<img style="width:100%;height:70px;object-fit:cover;display:block" src="${p.photo}" alt="">`;
-      } else {
-        const bgc=gc==='female'?'#e9d9f7':gc==='male'?'#d4ede0':'#f0e8d8';
-        photoHtml=`<div style="height:70px;background:${bgc};display:flex;align-items:center;justify-content:center;font-size:26px">${gc==='female'?'👩':gc==='male'?'👨':'🧑'}</div>`;
-      }
-      card.innerHTML=`${photoHtml}
-        <div style="padding:8px 10px">
-          <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fullName(p)}</div>
-          <div style="font-size:10px;color:var(--ink-light)">${lifespan(p)||'&nbsp;'}</div>
-          ${p.place?`<div style="font-size:10px;color:var(--ink-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${p.place}</div>`:''}
-        </div>`;
+      const photoHtml=p.photo?`<img style="width:100%;height:65px;object-fit:cover;display:block" src="${p.photo}" alt="">`:`<div style="height:65px;background:${bgc};display:flex;align-items:center;justify-content:center;font-size:24px">${gc==='female'?'👩':gc==='male'?'👨':'🧑'}</div>`;
+      card.innerHTML=`${photoHtml}<div style="padding:7px 9px"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fullName(p)}</div><div style="font-size:10px;color:var(--ink-light)">${lifespan(p)||'&nbsp;'}</div></div>`;
       row.appendChild(card);
     });
     content.appendChild(row);
-  });
+  }
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // LIST VIEW
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 function renderListView(){
   const el=document.getElementById('list-content');
   const ids=Object.keys(state.people);
-  if(!ids.length){
-    el.innerHTML='<div style="text-align:center;color:var(--ink-light);padding:60px 0;font-size:14px">No people added yet.</div>';
-    return;
-  }
-  const sorted=[...ids].sort((a,b)=>{
-    const pa=state.people[a],pb=state.people[b];
-    return fullName(pa).localeCompare(fullName(pb));
-  });
-  el.innerHTML=`<h2 style="font-size:20px;margin-bottom:20px;color:var(--green-mid)">${ids.length} ${ids.length===1?'Person':'People'}</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead><tr style="border-bottom:2px solid var(--parchment-dark)">
-        <th style="text-align:left;padding:8px 10px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.5px">Name</th>
-        <th style="text-align:left;padding:8px 10px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.5px">Life</th>
-        <th style="text-align:left;padding:8px 10px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.5px">Place</th>
-        <th style="text-align:left;padding:8px 10px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.5px">Connections</th>
-        <th style="padding:8px 10px"></th>
-      </tr></thead><tbody>
-    ${sorted.map(id=>{
-      const p=state.people[id];
-      const rels=state.relationships.filter(r=>r.a===id||r.b===id).length;
-      const gc=gClass(p.gender);
-      const dot=gc==='male'?'#2d6a4f':gc==='female'?'#4a2d6a':'#4a3a28';
-      return `<tr style="border-bottom:1px solid var(--parchment-dark)" onmouseenter="this.style.background='rgba(82,183,136,.05)'" onmouseleave="this.style.background=''">
-        <td style="padding:10px;display:flex;align-items:center;gap:8px">
-          ${p.photo?`<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`:`<div style="width:32px;height:32px;border-radius:50%;background:${dot};opacity:.2;flex-shrink:0"></div>`}
-          <span style="font-weight:500">${fullName(p)}</span>
-        </td>
-        <td style="padding:10px;color:var(--ink-light)">${lifespan(p)||'—'}</td>
-        <td style="padding:10px;color:var(--ink-light)">${p.place||'—'}</td>
-        <td style="padding:10px;color:var(--ink-light)">${rels}</td>
-        <td style="padding:10px"><button onclick="viewPerson('${id}')" style="font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--parchment-dark);background:var(--parchment);cursor:pointer;font-family:inherit">View</button></td>
-      </tr>`;
-    }).join('')}</tbody></table>`;
+  if(!ids.length){el.innerHTML='<div style="text-align:center;color:var(--ink-light);padding:60px 0;font-size:14px">No people added yet.</div>';return;}
+  const sorted=[...ids].sort((a,b)=>fullName(state.people[a]).localeCompare(fullName(state.people[b])));
+  el.innerHTML=`<h2 style="font-size:19px;margin-bottom:18px;color:var(--green-mid)">${ids.length} ${ids.length===1?'Person':'People'}</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="border-bottom:2px solid var(--parchment-dark)">
+      <th style="text-align:left;padding:7px 9px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.4px">Name</th>
+      <th style="text-align:left;padding:7px 9px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.4px">Life</th>
+      <th style="text-align:left;padding:7px 9px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.4px">Place</th>
+      <th style="text-align:left;padding:7px 9px;color:var(--ink-light);font-size:11px;text-transform:uppercase;letter-spacing:.4px">Connections</th>
+      <th style="padding:7px 9px"></th>
+    </tr></thead><tbody>
+  ${sorted.map(id=>{
+    const p=state.people[id];
+    const rels=state.relationships.filter(r=>r.a===id||r.b===id).length;
+    const gc=gClass(p.gender);const dot=gc==='male'?'#2d6a4f':gc==='female'?'#4a2d6a':'#4a3a28';
+    return `<tr style="border-bottom:1px solid var(--parchment-dark)" onmouseenter="this.style.background='rgba(82,183,136,.05)'" onmouseleave="this.style.background=''">
+      <td style="padding:9px;display:flex;align-items:center;gap:8px">${p.photo?`<img src="${p.photo}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0">`:`<div style="width:30px;height:30px;border-radius:50%;background:${dot};opacity:.2;flex-shrink:0"></div>`}<span style="font-weight:500">${fullName(p)}</span></td>
+      <td style="padding:9px;color:var(--ink-light)">${lifespan(p)||'—'}</td>
+      <td style="padding:9px;color:var(--ink-light)">${p.place||'—'}</td>
+      <td style="padding:9px;color:var(--ink-light)">${rels}</td>
+      <td style="padding:9px"><button onclick="viewPerson('${id}')" style="font-size:11px;padding:3px 9px;border-radius:5px;border:1px solid var(--parchment-dark);background:var(--parchment);cursor:pointer;font-family:inherit">View</button></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
 }
 
-// ══════════════════════════════════════════
-// PERSON MODAL
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// PERSON CRUD
+// ══════════════════════════════════════════════════
 function openAddPerson(){
+  const canEdit=!peer||isHost||(shareMode==='edit');
+  if(!canEdit){showToast('View only — cannot add people');return;}
   editingId=null;currentPhoto=null;
   document.getElementById('modal-add-title').textContent='Add Person';
   ['f-first','f-last','f-birth','f-death','f-place','f-occ','f-notes'].forEach(i=>document.getElementById(i).value='');
@@ -734,31 +883,21 @@ function openAddPerson(){
   document.getElementById('modal-add').style.display='flex';
 }
 
-function triggerPhotoUpload(){
-  if(event.target.id==='photo-file-input')return;
-  document.getElementById('photo-file-input').click();
-}
-
+function triggerPhotoUpload(){if(event.target.id==='photo-file-input')return;document.getElementById('photo-file-input').click();}
 function handlePhotoUpload(e){
-  const file=e.target.files[0];
-  if(!file)return;
+  const file=e.target.files[0];if(!file)return;
   if(file.size>5*1024*1024){showToast('Photo must be under 5MB');return;}
   const reader=new FileReader();
   reader.onload=ev=>{
     currentPhoto=ev.target.result;
-    const preview=document.getElementById('photo-preview');
-    preview.src=currentPhoto;preview.style.display='block';
+    const prev=document.getElementById('photo-preview');
+    prev.src=currentPhoto;prev.style.display='block';
     document.getElementById('photo-placeholder').style.display='none';
     document.getElementById('photo-remove-wrap').style.display='block';
   };
   reader.readAsDataURL(file);
 }
-
-function removePhoto(e){
-  e.stopPropagation();
-  currentPhoto=null;resetPhotoPreview();
-}
-
+function removePhoto(e){e.stopPropagation();currentPhoto=null;resetPhotoPreview();}
 function resetPhotoPreview(){
   document.getElementById('photo-preview').style.display='none';
   document.getElementById('photo-preview').src='';
@@ -771,108 +910,84 @@ function savePerson(){
   const first=document.getElementById('f-first').value.trim();
   const last=document.getElementById('f-last').value.trim();
   if(!first&&!last){alert('Please enter at least a name.');return;}
-  const data={
-    first,last,
-    birth:document.getElementById('f-birth').value||'',
-    death:document.getElementById('f-death').value||'',
-    gender:document.getElementById('f-gender').value,
-    place:document.getElementById('f-place').value.trim(),
-    occupation:document.getElementById('f-occ').value.trim(),
-    notes:document.getElementById('f-notes').value.trim(),
-    photo:currentPhoto
-  };
-  if(editingId){
-    Object.assign(state.people[editingId],data);
-  } else {
+  const data={first,last,birth:document.getElementById('f-birth').value||'',death:document.getElementById('f-death').value||'',gender:document.getElementById('f-gender').value,place:document.getElementById('f-place').value.trim(),occupation:document.getElementById('f-occ').value.trim(),notes:document.getElementById('f-notes').value.trim(),photo:currentPhoto};
+  if(editingId){Object.assign(state.people[editingId],data);}
+  else{
     const id='p'+state.nextId++;
     const n=Object.keys(state.people).length;
     const cols=Math.max(1,Math.ceil(Math.sqrt(n+1)));
     data.id=id;data.x=80+(n%cols)*210;data.y=80+Math.floor(n/cols)*220;
     state.people[id]=data;
   }
-  saveState();render();closeModal('modal-add');
-  showToast(editingId?'✓ Person updated':'✓ Person added');
+  saveState();render();broadcast();closeModal('modal-add');
+  showToast(editingId?'✓ Updated':'✓ Person added');
 }
 
 function editPerson(id){
-  editingId=id;
-  const p=state.people[id];
+  editingId=id;const p=state.people[id];
   document.getElementById('modal-add-title').textContent='Edit Person';
-  document.getElementById('f-first').value=p.first||'';
-  document.getElementById('f-last').value=p.last||'';
-  document.getElementById('f-birth').value=p.birth||'';
-  document.getElementById('f-death').value=p.death||'';
+  document.getElementById('f-first').value=p.first||'';document.getElementById('f-last').value=p.last||'';
+  document.getElementById('f-birth').value=p.birth||'';document.getElementById('f-death').value=p.death||'';
   document.getElementById('f-gender').value=p.gender||'unknown';
-  document.getElementById('f-place').value=p.place||'';
-  document.getElementById('f-occ').value=p.occupation||'';
+  document.getElementById('f-place').value=p.place||'';document.getElementById('f-occ').value=p.occupation||'';
   document.getElementById('f-notes').value=p.notes||'';
   currentPhoto=p.photo||null;
-  if(currentPhoto){
-    const prev=document.getElementById('photo-preview');
-    prev.src=currentPhoto;prev.style.display='block';
-    document.getElementById('photo-placeholder').style.display='none';
-    document.getElementById('photo-remove-wrap').style.display='block';
-  } else {resetPhotoPreview();}
+  if(currentPhoto){document.getElementById('photo-preview').src=currentPhoto;document.getElementById('photo-preview').style.display='block';document.getElementById('photo-placeholder').style.display='none';document.getElementById('photo-remove-wrap').style.display='block';}
+  else resetPhotoPreview();
   document.getElementById('modal-add').style.display='flex';
 }
 
 function deletePerson(id){
   delete state.people[id];
   state.relationships=state.relationships.filter(r=>r.a!==id&&r.b!==id);
-  saveState();render();showToast('🗑 Person deleted');
+  saveState();render();broadcast();showToast('🗑 Person deleted');
 }
 
-// ── VIEW DETAIL ──
 function viewPerson(id){
-  const p=state.people[id];
-  const gc=gClass(p.gender);
-  const hdr=document.getElementById('view-header');
-  hdr.style.background=gc==='female'?'#4a2d6a':gc==='male'?'var(--green-deep)':'#4a3a28';
+  const p=state.people[id];const gc=gClass(p.gender);
+  document.getElementById('view-header').style.background=gc==='female'?'#4a2d6a':gc==='male'?'var(--green-deep)':'#4a3a28';
   document.getElementById('view-name').textContent=fullName(p);
-
   const rels=state.relationships.filter(r=>r.a===id||r.b===id).map(rel=>{
-    const oid=rel.a===id?rel.b:rel.a;
-    const other=state.people[oid];if(!other)return null;
+    const oid=rel.a===id?rel.b:rel.a;const other=state.people[oid];if(!other)return null;
     const rev={parent:'child',child:'parent',partner:'partner',sibling:'sibling'};
     const label=rel.a===id?rel.type:rev[rel.type]||rel.type;
     return `<li><span class="rel-badge">${label}</span> <a href="#" onclick="closeModal('modal-view');viewPerson('${oid}');return false" style="color:var(--green-mid);text-decoration:none;font-weight:500">${fullName(other)}</a></li>`;
   }).filter(Boolean);
-
+  const canEdit=!peer||isHost||(shareMode==='edit');
   document.getElementById('view-body').innerHTML=`
     ${p.photo?`<img class="detail-photo" src="${p.photo}" alt="${fullName(p)}">`:''}
     <div class="detail-grid">
-      ${p.birth?`<div class="detail-label">Born</div><div class="detail-val">${p.birth}${p.place?' · '+p.place:''}</div>`:''}
-      ${p.death?`<div class="detail-label">Died</div><div class="detail-val">${p.death}</div>`:''}
-      <div class="detail-label">Gender</div><div class="detail-val" style="text-transform:capitalize">${p.gender||'Unknown'}</div>
-      ${p.occupation?`<div class="detail-label">Occupation</div><div class="detail-val">${p.occupation}</div>`:''}
-      ${p.notes?`<div class="detail-label">Notes</div><div class="detail-val">${p.notes}</div>`:''}
+      ${p.birth?`<div class="detail-label">Born</div><div>${p.birth}${p.place?' · '+p.place:''}</div>`:''}
+      ${p.death?`<div class="detail-label">Died</div><div>${p.death}</div>`:''}
+      <div class="detail-label">Gender</div><div style="text-transform:capitalize">${p.gender||'Unknown'}</div>
+      ${p.occupation?`<div class="detail-label">Occupation</div><div>${p.occupation}</div>`:''}
+      ${p.notes?`<div class="detail-label">Notes</div><div>${p.notes}</div>`:''}
     </div>
-    ${rels.length?`<div style="margin-top:14px"><div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Connections</div><ul class="rels-list">${rels.join('')}</ul></div>`:
-    '<div style="margin-top:14px;font-size:12px;color:var(--ink-light)">No connections yet — use "+ Connect" on the card.</div>'}
-  `;
+    ${rels.length?`<div style="margin-top:13px"><div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Connections</div><ul class="rels-list">${rels.join('')}</ul></div>`:'<div style="margin-top:12px;font-size:12px;color:var(--ink-light)">No connections yet.</div>'}`;
+  document.getElementById('view-edit-btn').style.display=canEdit?'':'none';
+  document.getElementById('view-delete-btn').style.display=canEdit?'':'none';
   document.getElementById('view-edit-btn').onclick=()=>{closeModal('modal-view');editPerson(id);};
   document.getElementById('view-delete-btn').onclick=()=>{if(confirm(`Delete ${fullName(p)}?`)){deletePerson(id);closeModal('modal-view');}};
   document.getElementById('modal-view').style.display='flex';
 }
 
-// ── RELATIONSHIPS ──
+// ══════════════════════════════════════════════════
+// RELATIONSHIPS
+// ══════════════════════════════════════════════════
 function openAddRel(id){
+  const canEdit=!peer||isHost||(shareMode==='edit');
+  if(!canEdit){showToast('View only — cannot add connections');return;}
   relSourceId=id;selectedPickId=null;
   const gc={male:'#2d6a4f',female:'#4a2d6a',other:'#4a3a28',unknown:'#4a3a28'};
-  const list=document.getElementById('person-pick-list');
-  list.innerHTML='';
+  const list=document.getElementById('person-pick-list');list.innerHTML='';
   const others=Object.values(state.people).filter(p=>p.id!==id);
-  if(!others.length){
-    list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--ink-light)">Add more people first.</div>';
-  } else {
-    others.forEach(p=>{
-      const div=document.createElement('div');
-      div.className='person-item';div.dataset.id=p.id;
-      div.innerHTML=`<div class="person-dot" style="background:${gc[p.gender]||'#888'}"></div>${fullName(p)}${p.birth?' ('+p.birth+')':''}`;
-      div.onclick=()=>{list.querySelectorAll('.person-item').forEach(i=>i.classList.remove('sel'));div.classList.add('sel');selectedPickId=p.id;};
-      list.appendChild(div);
-    });
-  }
+  if(!others.length){list.innerHTML='<div style="padding:11px;font-size:12px;color:var(--ink-light)">Add more people first.</div>';}
+  else others.forEach(p=>{
+    const div=document.createElement('div');div.className='person-item';div.dataset.id=p.id;
+    div.innerHTML=`<div class="person-dot" style="background:${gc[p.gender]||'#888'}"></div>${fullName(p)}${p.birth?' ('+p.birth+')':''}`;
+    div.onclick=()=>{list.querySelectorAll('.person-item').forEach(i=>i.classList.remove('sel'));div.classList.add('sel');selectedPickId=p.id;};
+    list.appendChild(div);
+  });
   document.querySelectorAll('.rel-option').forEach(o=>o.classList.remove('selected'));
   document.querySelector('[data-rel="parent"]').classList.add('selected');
   selectedRelType='parent';
@@ -886,48 +1001,45 @@ function selectRelType(el){
 
 function saveRelationship(){
   if(!selectedPickId){alert('Select a person to connect to.');return;}
-  if(state.relationships.some(r=>(r.a===relSourceId&&r.b===selectedPickId)||(r.a===selectedPickId&&r.b===relSourceId))){
-    showToast('Already connected!');return;
-  }
+  if(state.relationships.some(r=>(r.a===relSourceId&&r.b===selectedPickId)||(r.a===selectedPickId&&r.b===relSourceId))){showToast('Already connected!');return;}
   state.relationships.push({a:relSourceId,b:selectedPickId,type:selectedRelType});
-  saveState();render();closeModal('modal-rel');showToast('✓ Connected');
+  saveState();render();broadcast();closeModal('modal-rel');showToast('✓ Connected');
 }
 
-// ── LAYOUT ──
+// ══════════════════════════════════════════════════
+// LAYOUT
+// ══════════════════════════════════════════════════
 function genLayout(){
-  const {gen,maxGen}=computeGenerations();
+  const{gen,maxGen}=computeGenerations();
   const byGen={};
   Object.keys(state.people).forEach(id=>{const g=gen[id]||0;if(!byGen[g])byGen[g]=[];byGen[g].push(id);});
-  const CARD_W=170,CARD_H=210,ROW_GAP=80,COL_GAP=30,PAD=60;
   for(let g=0;g<=maxGen;g++){
     const ids=byGen[g]||[];
-    const rowW=ids.length*(CARD_W+COL_GAP)-COL_GAP;
-    const startX=Math.max(PAD,(window.innerWidth-rowW)/2);
-    ids.forEach((id,i)=>{
-      state.people[id].x=startX+i*(CARD_W+COL_GAP);
-      state.people[id].y=PAD+g*(CARD_H+ROW_GAP);
-    });
+    const rowW=ids.length*190;
+    const startX=Math.max(60,(window.innerWidth-rowW)/2);
+    ids.forEach((id,i)=>{state.people[id].x=startX+i*190;state.people[id].y=60+g*230;});
   }
-  saveState();render();showToast('✓ Generational layout applied');
+  saveState();render();broadcast();showToast('✓ Generational layout applied');
 }
 
 function gridLayout(){
   const ids=Object.keys(state.people);
   const cols=Math.max(1,Math.ceil(Math.sqrt(ids.length)));
   ids.forEach((id,i)=>{state.people[id].x=80+(i%cols)*210;state.people[id].y=80+Math.floor(i/cols)*220;});
-  saveState();render();showToast('✓ Grid layout applied');
+  saveState();render();broadcast();showToast('✓ Grid layout applied');
 }
 
-// ── ZOOM ──
+// ══════════════════════════════════════════════════
+// ZOOM
+// ══════════════════════════════════════════════════
 function zoomIn(){currentZoom=Math.min(2,currentZoom+.15);applyZoom();}
 function zoomOut(){currentZoom=Math.max(.35,currentZoom-.15);applyZoom();}
 function resetZoom(){currentZoom=1;applyZoom();}
-function applyZoom(){
-  const c=document.getElementById('tree-canvas');
-  c.style.transform=`scale(${currentZoom})`;c.style.transformOrigin='top left';
-}
+function applyZoom(){const c=document.getElementById('tree-canvas');c.style.transform=`scale(${currentZoom})`;c.style.transformOrigin='top left';}
 
-// ── MODALS ──
+// ══════════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════════
 function closeModal(id){document.getElementById(id).style.display='none';}
 function confirmDeleteAll(){document.getElementById('modal-delete').style.display='flex';}
 function deleteAllData(){
@@ -936,16 +1048,15 @@ function deleteAllData(){
   render();closeModal('modal-delete');showToast('🗑 All data deleted');
 }
 
-// ══════════════════════════════════════════
-// EXPORT / IMPORT JSON
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════════════════
 function exportJson(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='rootfree-backup.json';a.click();
   URL.revokeObjectURL(url);showToast('✓ Backup downloaded');
 }
-
 function importJson(){
   const input=document.createElement('input');input.type='file';input.accept='.json';
   input.onchange=e=>{
@@ -955,17 +1066,11 @@ function importJson(){
       try{
         const imp=JSON.parse(ev.target.result);
         if(imp.people&&imp.relationships){
-          if(confirm('Merge imported data with current tree?')){
+          if(confirm('Merge with current tree?')){
             const idMap={};
-            Object.values(imp.people).forEach(p=>{
-              const nid='p'+state.nextId++;idMap[p.id]=nid;
-              state.people[nid]={...p,id:nid};
-            });
-            imp.relationships.forEach(r=>{
-              const na=idMap[r.a],nb=idMap[r.b];
-              if(na&&nb)state.relationships.push({...r,a:na,b:nb});
-            });
-            saveState();render();showToast('✓ Data imported & merged');
+            Object.values(imp.people).forEach(p=>{const nid='p'+state.nextId++;idMap[p.id]=nid;state.people[nid]={...p,id:nid};});
+            imp.relationships.forEach(r=>{const na=idMap[r.a],nb=idMap[r.b];if(na&&nb)state.relationships.push({...r,a:na,b:nb});});
+            saveState();render();broadcast();showToast('✓ Imported & merged');
           }
         } else alert('Invalid RootFree backup file.');
       } catch(ex){alert('Could not parse file.');}
@@ -975,9 +1080,9 @@ function importJson(){
   input.click();
 }
 
-// ══════════════════════════════════════════
-// GEDCOM IMPORT / EXPORT
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// GEDCOM
+// ══════════════════════════════════════════════════
 function openGedcomImport(){
   document.getElementById('gedcom-file').value='';
   document.getElementById('gedcom-preview').style.display='none';
@@ -989,10 +1094,10 @@ function openGedcomImport(){
       const lines=ev.target.result.split(/\r?\n/);
       const inds=lines.filter(l=>l.includes('@')&&l.includes('INDI')).length;
       const fams=lines.filter(l=>l.includes('@')&&l.includes('FAM')).length;
-      document.getElementById('gedcom-preview-text').textContent=`Found ${inds} individuals and ${fams} families — ready to import.`;
-      document.getElementById('gedcom-preview').style.display='block';
-    };
-    r.readAsText(f);
+      const prev=document.getElementById('gedcom-preview');
+      prev.textContent=`Found ${inds} individuals and ${fams} families — ready to import.`;
+      prev.style.display='block';
+    };r.readAsText(f);
   };
 }
 
@@ -1003,85 +1108,49 @@ function doGedcomImport(){
   reader.onload=ev=>{
     try{
       const imported=parseGedcom(ev.target.result);
-      const idMap={};
-      let added=0;
+      const idMap={};let added=0;
       imported.people.forEach(p=>{
         const nid='p'+state.nextId++;idMap[p.gedId]=nid;
         const n=Object.keys(state.people).length;
         const cols=Math.max(1,Math.ceil(Math.sqrt(n+1)));
-        state.people[nid]={
-          id:nid,first:p.first||'',last:p.last||'',
-          birth:p.birth||'',death:p.death||'',
-          gender:p.gender||'unknown',place:p.place||'',
-          occupation:p.occupation||'',notes:p.notes||'',
-          photo:null,
-          x:80+(n%cols)*210,y:80+Math.floor(n/cols)*220
-        };
+        state.people[nid]={id:nid,first:p.first||'',last:p.last||'',birth:p.birth||'',death:p.death||'',gender:p.gender||'unknown',place:p.place||'',occupation:p.occupation||'',notes:p.notes||'',photo:null,x:80+(n%cols)*210,y:80+Math.floor(n/cols)*220};
         added++;
       });
-      imported.relationships.forEach(rel=>{
-        const a=idMap[rel.a],b=idMap[rel.b];
-        if(a&&b)state.relationships.push({a,b,type:rel.type});
-      });
-      saveState();render();closeModal('modal-gedcom');
-      showToast(`✓ Imported ${added} people from GEDCOM`,3500);
+      imported.relationships.forEach(rel=>{const a=idMap[rel.a],b=idMap[rel.b];if(a&&b)state.relationships.push({a,b,type:rel.type});});
+      saveState();render();broadcast();closeModal('modal-gedcom');showToast(`✓ Imported ${added} people`,3500);
     } catch(ex){alert('Error parsing GEDCOM: '+ex.message);}
   };
   reader.readAsText(file);
 }
 
 function parseGedcom(text){
-  const lines=text.split(/\r?\n/);
-  const people=[];
-  const relationships=[];
-  // Parse individuals
-  const indiMap={};
+  const lines=text.split(/\r?\n/);const people=[];const relationships=[];const indiMap={};
   let cur=null,inTag=null;
   lines.forEach(line=>{
-    const m=line.match(/^(\d+)\s+(@\S+@|\S+)\s*(.*)?$/);
-    if(!m)return;
-    const[,lvl,tag,val]=[m[1],m[2],m[3]||''];
-    if(lvl==='0'&&tag.startsWith('@')&&val.trim()==='INDI'){
-      cur={gedId:tag,first:'',last:'',birth:'',death:'',gender:'unknown',place:'',occupation:'',notes:''};
-      inTag=null;
-      people.push(cur);indiMap[tag]=cur;
-    } else if(lvl==='0'){cur=null;inTag=null;}
+    const m=line.match(/^(\d+)\s+(@\S+@|\S+)\s*(.*)?$/);if(!m)return;
+    const lvl=m[1],tag=m[2],val=(m[3]||'').trim();
+    if(lvl==='0'&&tag.startsWith('@')&&val==='INDI'){cur={gedId:tag,first:'',last:'',birth:'',death:'',gender:'unknown',place:'',occupation:'',notes:''};inTag=null;people.push(cur);indiMap[tag]=cur;}
+    else if(lvl==='0'){cur=null;inTag=null;}
     else if(cur){
-      if(tag==='NAME'){
-        const nm=val.replace(/\//g,'').trim();
-        const parts=nm.split(' ');
-        // In GEDCOM, surname is between /slashes/, first name is before
-        const sMatch=val.match(/\/([^/]*)\//) ;
-        cur.last=sMatch?sMatch[1].trim():'';
-        cur.first=val.replace(/\/[^/]*\//,'').trim();
-      }
+      if(tag==='NAME'){const sM=val.match(/\/([^/]*)\//);cur.last=sM?sM[1].trim():'';cur.first=val.replace(/\/[^/]*\//,'').trim();}
       else if(tag==='SEX'){cur.gender=val==='M'?'male':val==='F'?'female':'other';}
-      else if(tag==='BIRT'){inTag='BIRT';}
-      else if(tag==='DEAT'){inTag='DEAT';}
-      else if(tag==='OCCU'){cur.occupation=val;}
-      else if(tag==='NOTE'){cur.notes=(cur.notes+' '+val).trim();}
-      else if(tag==='DATE'){
-        if(inTag==='BIRT')cur.birth=parseGedDate(val);
-        else if(inTag==='DEAT')cur.death=parseGedDate(val);
-      }
-      else if(tag==='PLAC'){
-        if(inTag==='BIRT')cur.place=val;
-        inTag=null;
-      }
-      else if(['BIRT','DEAT'].indexOf(tag)<0){inTag=null;}
+      else if(tag==='BIRT')inTag='BIRT';
+      else if(tag==='DEAT')inTag='DEAT';
+      else if(tag==='OCCU')cur.occupation=val;
+      else if(tag==='NOTE')cur.notes=(cur.notes+' '+val).trim();
+      else if(tag==='DATE'){if(inTag==='BIRT')cur.birth=parseGedDate(val);else if(inTag==='DEAT')cur.death=parseGedDate(val);}
+      else if(tag==='PLAC'){if(inTag==='BIRT')cur.place=val;inTag=null;}
+      else if(!['BIRT','DEAT'].includes(tag))inTag=null;
     }
   });
-  // Parse families
-  cur=null;
-  let husb=null,wife=null,childs=[];
+  cur=null;let husb=null,wife=null,childs=[];
   lines.forEach(line=>{
-    const m=line.match(/^(\d+)\s+(@\S+@|\S+)\s*(.*)?$/);
-    if(!m)return;
-    const[,lvl,tag,val]=[m[1],m[2],m[3]||''];
-    if(lvl==='0'&&tag.startsWith('@')&&val.trim()==='FAM'){
-      if(husb&&wife){relationships.push({a:husb,b:wife,type:'partner'});}
-      if(husb){childs.forEach(c=>relationships.push({a:husb,b:c,type:'parent'}));}
-      if(wife){childs.forEach(c=>relationships.push({a:wife,b:c,type:'parent'}));}
+    const m=line.match(/^(\d+)\s+(@\S+@|\S+)\s*(.*)?$/);if(!m)return;
+    const lvl=m[1],tag=m[2],val=(m[3]||'').trim();
+    if(lvl==='0'&&tag.startsWith('@')&&val==='FAM'){
+      if(husb&&wife)relationships.push({a:husb,b:wife,type:'partner'});
+      if(husb)childs.forEach(c=>relationships.push({a:husb,b:c,type:'parent'}));
+      if(wife)childs.forEach(c=>relationships.push({a:wife,b:c,type:'parent'}));
       husb=null;wife=null;childs=[];cur='fam';
     } else if(lvl==='0'){
       if(husb&&wife)relationships.push({a:husb,b:wife,type:'partner'});
@@ -1089,66 +1158,40 @@ function parseGedcom(text){
       if(wife)childs.forEach(c=>relationships.push({a:wife,b:c,type:'parent'}));
       husb=null;wife=null;childs=[];cur=null;
     } else if(cur==='fam'){
-      if(tag==='HUSB')husb=val.trim();
-      else if(tag==='WIFE')wife=val.trim();
-      else if(tag==='CHIL')childs.push(val.trim());
+      if(tag==='HUSB')husb=val;else if(tag==='WIFE')wife=val;else if(tag==='CHIL')childs.push(val);
     }
   });
-  // flush last family
   if(husb&&wife)relationships.push({a:husb,b:wife,type:'partner'});
   if(husb)childs.forEach(c=>relationships.push({a:husb,b:c,type:'parent'}));
   if(wife)childs.forEach(c=>relationships.push({a:wife,b:c,type:'parent'}));
-
   return{people,relationships};
 }
 
-function parseGedDate(d){
-  if(!d)return'';
-  const m=d.match(/(\d{4})/);
-  return m?m[1]:d;
-}
+function parseGedDate(d){if(!d)return'';const m=d.match(/(\d{4})/);return m?m[1]:d;}
 
 function exportGedcom(){
-  const ids=Object.keys(state.people);
-  if(!ids.length){showToast('No people to export');return;}
-  let ged='0 HEAD\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n1 SOUR ROOTFREE\n2 NAME RootFree\n2 VERS 2.0\n';
-  ged+='1 DATE '+new Date().toLocaleDateString('en-GB').replace(/\//g,' ')+'\n';
-  ged+='0 @SUBM@ SUBM\n1 NAME RootFree User\n';
-
+  const ids=Object.keys(state.people);if(!ids.length){showToast('No people to export');return;}
+  let ged='0 HEAD\n1 GEDC\n2 VERS 5.5.1\n1 CHAR UTF-8\n1 SOUR ROOTFREE\n2 NAME RootFree\n2 VERS 3.0\n0 @SUBM@ SUBM\n1 NAME RootFree User\n';
   ids.forEach(id=>{
-    const p=state.people[id];
-    const gedId='@'+id.toUpperCase()+'@';
-    ged+=`0 ${gedId} INDI\n`;
-    const fn=(p.first||'').trim(),ln=(p.last||'').trim();
-    ged+=`1 NAME ${fn} /${ln}/\n`;
-    if(fn)ged+=`2 GIVN ${fn}\n`;
-    if(ln)ged+=`2 SURN ${ln}\n`;
-    if(p.gender){const s=p.gender==='male'?'M':p.gender==='female'?'F':'U';ged+=`1 SEX ${s}\n`;}
+    const p=state.people[id];const gedId='@'+id.toUpperCase()+'@';
+    ged+=`0 ${gedId} INDI\n1 NAME ${(p.first||'').trim()} /${(p.last||'').trim()}/\n`;
+    if(p.first)ged+=`2 GIVN ${p.first}\n`;if(p.last)ged+=`2 SURN ${p.last}\n`;
+    if(p.gender){ged+=`1 SEX ${p.gender==='male'?'M':p.gender==='female'?'F':'U'}\n`;}
     if(p.birth){ged+=`1 BIRT\n2 DATE ${p.birth}\n`;if(p.place)ged+=`2 PLAC ${p.place}\n`;}
     if(p.death)ged+=`1 DEAT\n2 DATE ${p.death}\n`;
     if(p.occupation)ged+=`1 OCCU ${p.occupation}\n`;
     if(p.notes)ged+=`1 NOTE ${p.notes.replace(/\n/g,' ')}\n`;
   });
-
-  // Build FAM records from partner relationships
-  const partners=state.relationships.filter(r=>r.type==='partner');
-  const famMap={};
-  partners.forEach((rel,i)=>{
+  state.relationships.filter(r=>r.type==='partner').forEach((rel,i)=>{
     const fid=`@F${i+1}@`;
-    const pA=state.people[rel.a],pB=state.people[rel.b];
+    const pA=state.people[rel.a];
     const husb=pA&&pA.gender==='female'?rel.b:rel.a;
     const wife=husb===rel.a?rel.b:rel.a;
-    famMap[rel.a+':'+rel.b]=fid;famMap[rel.b+':'+rel.a]=fid;
-    ged+=`0 ${fid} FAM\n`;
-    ged+=`1 HUSB @${husb.toUpperCase()}@\n`;
-    ged+=`1 WIFE @${wife.toUpperCase()}@\n`;
-    // Find children
+    ged+=`0 ${fid} FAM\n1 HUSB @${husb.toUpperCase()}@\n1 WIFE @${wife.toUpperCase()}@\n`;
     const ch=new Set();
     state.relationships.filter(r=>r.type==='parent'&&(r.a===rel.a||r.a===rel.b)).forEach(r=>ch.add(r.b));
-    state.relationships.filter(r=>r.type==='child'&&(r.b===rel.a||r.b===rel.b)).forEach(r=>ch.add(r.a));
     ch.forEach(cid=>ged+=`1 CHIL @${cid.toUpperCase()}@\n`);
   });
-
   ged+='0 TRLR\n';
   const blob=new Blob([ged],{type:'text/plain'});
   const url=URL.createObjectURL(blob);
@@ -1156,9 +1199,9 @@ function exportGedcom(){
   URL.revokeObjectURL(url);showToast('✓ GEDCOM exported');
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 loadState();
 </script>
 </body>
