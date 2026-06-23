@@ -1477,34 +1477,28 @@ function updateCanvasSize(){
 function drawConnectors(){
   const svg = document.getElementById('connector-svg');
   svg.innerHTML = '';
-  const CARD_W = 172;
   const GREEN = '#2d6a4f', PARTNER = '#b07d3a', SIBLING = '#6b4fa0';
 
-  // Get actual rendered card bottom/top/centerX from the DOM
-  function cardInfo(p){
-    const card = document.getElementById('card-' + p.id);
-    if(card){
-      const x = parseFloat(card.style.left)||0;
-      const y = parseFloat(card.style.top)||0;
-      const h = card.offsetHeight;
-      const w = card.offsetWidth;
-      return { cx: x + w/2, top: y, bottom: y + h, mid: y + h/2 };
-    }
-    // fallback
-    const x = p.x||0, y = p.y||0;
-    return { cx: x + CARD_W/2, top: y, bottom: y+200, mid: y+100 };
+  function info(p){
+    const el = document.getElementById('card-' + p.id);
+    if(!el) return null;
+    const x = parseFloat(el.style.left)||0;
+    const y = parseFloat(el.style.top)||0;
+    const w = el.offsetWidth||172;
+    const h = el.offsetHeight||180;
+    return { cx: x + w/2, top: y, bottom: y + h, mid: y + h/2, left: x, right: x+w };
   }
 
-  function ln(x1,y1,x2,y2,col,dash){
+  function seg(x1,y1,x2,y2,col,dash,op){
     const el = document.createElementNS('http://www.w3.org/2000/svg','line');
-    el.setAttribute('x1',x1); el.setAttribute('y1',y1);
-    el.setAttribute('x2',x2); el.setAttribute('y2',y2);
+    el.setAttribute('x1',Math.round(x1)); el.setAttribute('y1',Math.round(y1));
+    el.setAttribute('x2',Math.round(x2)); el.setAttribute('y2',Math.round(y2));
     el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.6');
-    el.setAttribute('opacity','0.6');
+    el.setAttribute('opacity', op||'0.6');
     if(dash) el.setAttribute('stroke-dasharray',dash);
-    svg.appendChild(el);
+    svg.appendChild(el); return el;
   }
-  function cv(x1,y1,x2,y2,col,dash){
+  function bez(x1,y1,x2,y2,col,dash){
     const el = document.createElementNS('http://www.w3.org/2000/svg','path');
     const my=(y1+y2)/2;
     el.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
@@ -1513,78 +1507,80 @@ function drawConnectors(){
     if(dash) el.setAttribute('stroke-dasharray',dash);
     svg.appendChild(el);
   }
-  function lbl(x,y,txt,col){
+  function txt(x,y,t,col){
     const el = document.createElementNS('http://www.w3.org/2000/svg','text');
-    el.setAttribute('x',x); el.setAttribute('y',y);
+    el.setAttribute('x',Math.round(x)); el.setAttribute('y',Math.round(y));
     el.setAttribute('text-anchor','middle'); el.setAttribute('font-size','10');
     el.setAttribute('fill',col); el.setAttribute('opacity','0.75');
     el.setAttribute('font-family','Inter,sans-serif'); el.setAttribute('font-weight','500');
-    el.textContent=txt; svg.appendChild(el);
+    el.textContent=t; svg.appendChild(el);
   }
 
-  // Partner lines — connect horizontally at card midpoints
+  // Partners — curved dashed line between card midpoints
   state.relationships.filter(r=>r.type==='partner').forEach(rel=>{
     const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ai=cardInfo(a), bi=cardInfo(b);
-    cv(ai.cx,ai.mid,bi.cx,bi.mid,PARTNER,'6 4');
-    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-7,'partner',PARTNER);
+    const ai=info(a), bi=info(b); if(!ai||!bi) return;
+    bez(ai.cx,ai.mid,bi.cx,bi.mid,PARTNER,'6 4');
+    txt((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'partner',PARTNER);
   });
 
-  // Sibling lines
+  // Siblings — curved dashed line
   state.relationships.filter(r=>r.type==='sibling').forEach(rel=>{
     const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ai=cardInfo(a), bi=cardInfo(b);
-    cv(ai.cx,ai.mid,bi.cx,bi.mid,SIBLING,'4 3');
-    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-7,'sibling',SIBLING);
+    const ai=info(a), bi=info(b); if(!ai||!bi) return;
+    bez(ai.cx,ai.mid,bi.cx,bi.mid,SIBLING,'4 3');
+    txt((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-8,'sibling',SIBLING);
   });
 
-  // Normalize all parent-child to {parentId, childId}
-  const pairs = [];
-  state.relationships.forEach(rel=>{
-    if(rel.type==='parent') pairs.push({parentId:rel.a, childId:rel.b});
-    if(rel.type==='child')  pairs.push({parentId:rel.b, childId:rel.a});
+  // Normalise all parent-child pairs
+  const pairs=[];
+  state.relationships.forEach(r=>{
+    if(r.type==='parent') pairs.push({pid:r.a, cid:r.b});
+    if(r.type==='child')  pairs.push({pid:r.b, cid:r.a});
   });
 
   // Group by child
-  const byChild = {};
-  pairs.forEach(({parentId,childId})=>{
-    if(!byChild[childId]) byChild[childId]=[];
-    if(!byChild[childId].includes(parentId)) byChild[childId].push(parentId);
+  const byChild={};
+  pairs.forEach(({pid,cid})=>{
+    if(!byChild[cid]) byChild[cid]=[];
+    if(!byChild[cid].includes(pid)) byChild[cid].push(pid);
   });
 
-  Object.entries(byChild).forEach(([childId, parentIds])=>{
-    const child = state.people[childId]; if(!child) return;
-    const ci = cardInfo(child);
-    const GAP = 30; // space between cards for junction line
+  const GAP = 28; // vertical gap between cards for junction
 
-    if(parentIds.length === 1){
-      const par = state.people[parentIds[0]]; if(!par) return;
-      const pi = cardInfo(par);
-      // Simple elbow: down from parent bottom, across, up to child top
-      const jy = ci.top - GAP;
-      ln(pi.cx, pi.bottom, pi.cx, jy, GREEN);
-      ln(pi.cx, jy, ci.cx, jy, GREEN);
-      ln(ci.cx, jy, ci.cx, ci.top, GREEN);
-      lbl(ci.cx, ci.top - GAP/2 - 2, 'child', GREEN);
+  Object.entries(byChild).forEach(([cid, pids])=>{
+    const child=state.people[cid]; if(!child) return;
+    const ci=info(child); if(!ci) return;
+    const jy = ci.top - GAP; // junction Y — horizontal bar sits here
+
+    const parInfos = pids.map(id=>{ const p=state.people[id]; return p?info(p):null; }).filter(Boolean);
+    if(!parInfos.length) return;
+
+    if(parInfos.length === 1){
+      // Single parent: straight elbow down then across then down to child
+      const pi = parInfos[0];
+      seg(pi.cx, pi.bottom, pi.cx, jy, GREEN);       // down from parent
+      seg(pi.cx, jy, ci.cx, jy, GREEN);              // across to child cx
+      seg(ci.cx, jy, ci.cx, ci.top, GREEN);          // down to child top
+      txt(ci.cx, ci.top - 10, 'child', GREEN);
     } else {
-      const pars = parentIds.map(id=>state.people[id]).filter(Boolean);
-      const infos = pars.map(p=>cardInfo(p));
-      const jy = ci.top - GAP;
-      const xs = infos.map(i=>i.cx);
-      const barX1 = Math.min(...xs);
-      const barX2 = Math.max(...xs);
-      const barMid = (barX1+barX2)/2;
+      // Multiple parents: each drops down to jy, horizontal bar spans them,
+      // single drop from bar midpoint to child
+      const xs = parInfos.map(pi=>pi.cx);
+      const barLeft  = Math.min(...xs);
+      const barRight = Math.max(...xs);
+      const barMid   = (barLeft + barRight) / 2;
 
-      // Drop from each parent to junction bar
-      infos.forEach(pi=>{
-        ln(pi.cx, pi.bottom, pi.cx, jy, GREEN);
+      // Drop each parent to junction row
+      parInfos.forEach(pi=>{
+        seg(pi.cx, pi.bottom, pi.cx, jy, GREEN);
       });
-      // Horizontal bar
-      ln(barX1, jy, barX2, jy, GREEN);
-      // Drop from bar midpoint to child top
-      ln(barMid, jy, ci.cx, jy, GREEN);
-      ln(ci.cx, jy, ci.cx, ci.top, GREEN);
-      lbl(ci.cx, ci.top - GAP/2 - 2, 'child', GREEN);
+      // Horizontal bar connecting all parents at junction row
+      seg(barLeft, jy, barRight, jy, GREEN);
+      // Single vertical drop from bar midpoint down to child top
+      seg(barMid, jy, ci.cx, jy + GAP/2, GREEN);    // diagonal if needed
+      seg(ci.cx, jy + GAP/2, ci.cx, ci.top, GREEN); // straight down
+      txt(ci.cx, ci.top - 10, 'child', GREEN);
     }
   });
 }
