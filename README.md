@@ -1,137 +1,132 @@
-# 🌳 RootFree
+# RootFree
 
-**A free, private, browser-based family tree builder — no account, no cloud, delete anytime.**
+A free, private family tree builder that runs entirely in your browser.
 
-RootFree is an open-source alternative to Ancestry and MyHeritage. Your family history is stored only on your device. No subscription, no data harvesting, no paywall — ever.
+No account. No subscription. No server. Your family's history stays on your device.
 
-> **Try it live →** [Mip555.github.io/rootfree](https://Mip555.github.io/rootfree)
+**Live app → [mip555.github.io/root-free](https://mip555.github.io/root-free)**
 
 ---
 
-## Why RootFree?
+## The problem with existing tools
 
-Most family tree tools charge a monthly fee, lock your data in proprietary formats, or profit from selling access to your family's personal history. RootFree takes the opposite approach:
+Ancestry, MyHeritage, and similar services charge monthly fees, lock your data in proprietary formats, and make their business by owning access to your family's history. When you stop paying, you lose access.
 
-- Your data never leaves your browser
-- No account required
-- One button deletes everything, instantly and permanently
-- Export your tree at any time in open formats
+RootFree works the other way around. Everything runs in your browser. Nothing is sent anywhere. You own the data completely, and you can delete it all in one click.
 
 ---
 
 ## Features
 
-- **📷 Photo attachments** — Upload a photo for each person, stored locally in your browser
-- **🌿 Interactive tree canvas** — Drag and arrange cards freely on an infinite canvas
-- **📊 Generations view** — Automatically groups your family by generation (great-grandparents → grandchildren)
-- **📋 List view** — Alphabetical table of everyone in your tree
-- **🔗 Relationships** — Connect people as parent, child, partner, or sibling
-- **📥 GEDCOM import** — Import `.ged` files from Ancestry, MyHeritage, FamilySearch, and most genealogy apps
-- **📤 GEDCOM export** — Export your tree in the universal GEDCOM 5.5.1 standard
-- **💾 Backup & restore** — Export and import your full tree as a JSON file
-- **🗑 One-click delete** — Permanently erase all data from your device instantly
-- **🔒 100% offline-capable** — Works without an internet connection once loaded
+**Building your tree**
+- Add people with name, photo, birth and death years, birthplace, occupation, and notes
+- Connect people as parent, child, partner, or sibling
+- Drag and reposition cards freely on an infinite canvas
+- Auto-arrange by generation or grid with one click
+
+**Viewing your tree**
+- Tree view — freeform canvas with relationship lines
+- Generations view — automatically groups family by generation, from great-grandparents down to grandchildren
+- People view — alphabetical table of everyone in the tree
+
+**Sharing**
+- Share a live link with family members — changes sync peer-to-peer in real time
+- Choose edit or view-only access when sharing
+- No server involved — data travels directly between browsers
+- Session ends when everyone closes the tab
+
+**Data portability**
+- Import GEDCOM files from Ancestry, MyHeritage, FamilySearch, and any compatible app
+- Export to GEDCOM 5.5.1 — the universal genealogy standard
+- Backup and restore as JSON
+- One-click permanent delete
 
 ---
 
-## Getting Started
+## Privacy
 
-### Use it instantly (no install)
+**Solo mode** — all data is stored in your browser's `localStorage`. Nothing is sent to any server, ever. Clearing your browser storage erases your tree, so export a backup regularly.
 
-Open [Mip555.github.io/rootfree](https://Mip555.github.io/rootfree) in any modern browser and start adding people.
+**Shared mode** — when you share a tree, data travels directly between browsers using WebRTC peer-to-peer. The signalling server (PeerJS) facilitates the connection but never sees your family data. When the session ends, nothing persists anywhere outside the participants' browsers.
+
+There is no analytics, no tracking, and no backend. The entire product is a single HTML file.
+
+---
+
+## Getting started
+
+### Use it in the browser
+
+Open [mip555.github.io/root-free](https://mip555.github.io/root-free) — no install needed.
 
 ### Run it locally
 
-Download `index.html` and open it in your browser. That's it — no server, no build step, no dependencies.
+Download `index.html` and open it directly in any modern browser. No server, no build step, no dependencies.
 
 ```bash
-git clone https://github.com/Mip555/rootfree.git
-cd rootfree
-open index.html   # Mac
-start index.html  # Windows
+git clone https://github.com/Mip555/root-free.git
+cd root-free
+open index.html      # macOS
+xdg-open index.html  # Linux
+start index.html     # Windows
 ```
 
-### Self-host it
+### Self-host
 
-Upload `index.html` to any static web host — GitHub Pages, Netlify, Vercel, or your own server. No backend required.
-
----
-
-## How Your Data Is Stored
-
-All data is saved in your browser's `localStorage` — the same technology used by password managers and offline-capable apps. This means:
-
-- **Nothing is sent to any server** — ever
-- Your tree persists between sessions on the same device and browser
-- Clearing your browser data will erase your tree — export a backup regularly
-- Data does **not** sync across devices (use Export → Import to move between devices)
+Upload `index.html` to any static host — GitHub Pages, Netlify, Vercel, or your own server. No backend required.
 
 ---
 
-## GEDCOM Support
+## GEDCOM
 
-[GEDCOM](https://en.wikipedia.org/wiki/GEDCOM) (Genealogical Data Communication) is the universal standard for family tree data, supported by virtually every genealogy platform.
+[GEDCOM](https://en.wikipedia.org/wiki/GEDCOM) is the standard interchange format for genealogical data, supported by virtually every family tree platform.
+
+RootFree imports and exports GEDCOM 5.5.1, including names, birth and death years, birthplaces, occupations, genders, notes, and family relationships.
 
 **Import from:** Ancestry, MyHeritage, FamilySearch, MacFamilyTree, Gramps, Legacy Family Tree, and any app that exports `.ged` files.
 
 **Export to:** Any of the above. Your data is never trapped.
 
-RootFree parses GEDCOM 5.5.1 including names, birth and death dates, birthplaces, occupations, gender, notes, and all family relationships.
-
 ---
 
 ## Roadmap
 
-Planned features — contributions welcome:
+Contributions welcome on any of these:
 
-- [ ] Timeline view (births, deaths, and events on a horizontal axis)
-- [ ] DNA match comparison (compare exported trees to find shared ancestors)
-- [ ] Print / PDF export
-- [ ] Mobile touch support for dragging cards
+- [ ] Timeline view — births, deaths, and events on a horizontal axis
+- [ ] Print and PDF export
+- [ ] Mobile touch support for dragging
 - [ ] Dark mode
-- [ ] Multiple trees (separate localStorage namespaces)
-- [ ] Relationship hints (detect likely missing connections)
+- [ ] Multiple trees
+- [ ] Relationship suggestions — detect likely missing connections
+- [ ] DNA match comparison — compare exported trees to find shared ancestors
 
 ---
 
 ## Contributing
 
-RootFree is a single HTML file with no build process, making it one of the easiest open source projects to contribute to — if you know basic HTML, CSS, and JavaScript, you can contribute.
-
-**To get started:**
+RootFree is a single HTML file with no build process. If you know HTML, CSS, and JavaScript, you can contribute without any setup.
 
 1. Fork this repository
-2. Make your changes to `index.html`
-3. Open it in your browser to test
-4. Submit a pull request with a clear description of what you changed and why
+2. Edit `index.html`
+3. Open it in your browser to test your changes
+4. Open a pull request describing what you changed and why
 
-Please open an issue before starting large changes, so we can discuss the approach first.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more detail.
+For significant changes, open an issue first so we can discuss the approach.
 
 ---
 
-## Browser Support
+## Browser support
 
-| Browser | Support |
+| Browser | Status |
 |---|---|
-| Chrome / Edge | ✅ Full |
-| Firefox | ✅ Full |
-| Safari | ✅ Full |
-| Mobile browsers | ⚠️ Usable, drag not optimised yet |
+| Chrome / Edge | Full support |
+| Firefox | Full support |
+| Safari | Full support |
+| Mobile | Usable — drag not yet optimised for touch |
 
 ---
 
 ## License
 
-MIT — free to use, modify, and distribute. See [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgements
-
-Built as an open alternative to subscription genealogy services. Inspired by the belief that your family's history belongs to you.
-
----
-
-*RootFree does not collect any data. There is no analytics, no tracking, and no server. The source code is the entire product.*
+MIT. Free to use, modify, and distribute. See [LICENSE](LICENSE).
