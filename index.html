@@ -1480,104 +1480,111 @@ function drawConnectors(){
   const CARD_W = 172;
   const GREEN = '#2d6a4f', PARTNER = '#b07d3a', SIBLING = '#6b4fa0';
 
-  function cardCX(p){ return (p.x||0) + CARD_W/2; }
-  function cardBottom(p){ return (p.y||0) + (p.photo ? 230 : 140); }
-  function cardTop(p){ return (p.y||0); }
-  function cardMid(p){ return (p.y||0) + (p.photo ? 115 : 70); }
+  // Get actual rendered card bottom/top/centerX from the DOM
+  function cardInfo(p){
+    const card = document.getElementById('card-' + p.id);
+    if(card){
+      const x = parseFloat(card.style.left)||0;
+      const y = parseFloat(card.style.top)||0;
+      const h = card.offsetHeight;
+      const w = card.offsetWidth;
+      return { cx: x + w/2, top: y, bottom: y + h, mid: y + h/2 };
+    }
+    // fallback
+    const x = p.x||0, y = p.y||0;
+    return { cx: x + CARD_W/2, top: y, bottom: y+200, mid: y+100 };
+  }
 
-  function line(x1,y1,x2,y2,col,dash,opacity){
+  function ln(x1,y1,x2,y2,col,dash){
     const el = document.createElementNS('http://www.w3.org/2000/svg','line');
     el.setAttribute('x1',x1); el.setAttribute('y1',y1);
     el.setAttribute('x2',x2); el.setAttribute('y2',y2);
     el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.6');
-    el.setAttribute('opacity', opacity||'0.55');
+    el.setAttribute('opacity','0.6');
     if(dash) el.setAttribute('stroke-dasharray',dash);
     svg.appendChild(el);
   }
-  function curve(x1,y1,x2,y2,col,dash){
+  function cv(x1,y1,x2,y2,col,dash){
     const el = document.createElementNS('http://www.w3.org/2000/svg','path');
-    const my = (y1+y2)/2;
+    const my=(y1+y2)/2;
     el.setAttribute('d',`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`);
     el.setAttribute('stroke',col); el.setAttribute('stroke-width','1.6');
-    el.setAttribute('fill','none'); el.setAttribute('opacity','0.55');
+    el.setAttribute('fill','none'); el.setAttribute('opacity','0.6');
     if(dash) el.setAttribute('stroke-dasharray',dash);
     svg.appendChild(el);
   }
-  function label(x,y,txt,col){
+  function lbl(x,y,txt,col){
     const el = document.createElementNS('http://www.w3.org/2000/svg','text');
     el.setAttribute('x',x); el.setAttribute('y',y);
     el.setAttribute('text-anchor','middle'); el.setAttribute('font-size','10');
     el.setAttribute('fill',col); el.setAttribute('opacity','0.75');
     el.setAttribute('font-family','Inter,sans-serif'); el.setAttribute('font-weight','500');
-    el.textContent = txt; svg.appendChild(el);
+    el.textContent=txt; svg.appendChild(el);
   }
 
-  // ── Partner lines ──
+  // Partner lines — connect horizontally at card midpoints
   state.relationships.filter(r=>r.type==='partner').forEach(rel=>{
     const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ax=cardCX(a), ay=cardMid(a), bx=cardCX(b), by=cardMid(b);
-    curve(ax,ay,bx,by,PARTNER,'6 4');
-    label((ax+bx)/2,(ay+by)/2-6,'partner',PARTNER);
+    const ai=cardInfo(a), bi=cardInfo(b);
+    cv(ai.cx,ai.mid,bi.cx,bi.mid,PARTNER,'6 4');
+    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-7,'partner',PARTNER);
   });
 
-  // ── Sibling lines ──
+  // Sibling lines
   state.relationships.filter(r=>r.type==='sibling').forEach(rel=>{
     const a=state.people[rel.a], b=state.people[rel.b]; if(!a||!b) return;
-    const ax=cardCX(a), ay=cardMid(a), bx=cardCX(b), by=cardMid(b);
-    curve(ax,ay,bx,by,SIBLING,'4 3');
-    label((ax+bx)/2,(ay+by)/2-6,'sibling',SIBLING);
+    const ai=cardInfo(a), bi=cardInfo(b);
+    cv(ai.cx,ai.mid,bi.cx,bi.mid,SIBLING,'4 3');
+    lbl((ai.cx+bi.cx)/2,(ai.mid+bi.mid)/2-7,'sibling',SIBLING);
   });
 
-  // ── Parent→Child: group by child so multiple parents share one junction ──
-  // Collect all parent rels: normalize to {parentId, childId}
-  const parentChildPairs = [];
+  // Normalize all parent-child to {parentId, childId}
+  const pairs = [];
   state.relationships.forEach(rel=>{
-    if(rel.type==='parent') parentChildPairs.push({parentId:rel.a, childId:rel.b});
-    if(rel.type==='child')  parentChildPairs.push({parentId:rel.b, childId:rel.a});
+    if(rel.type==='parent') pairs.push({parentId:rel.a, childId:rel.b});
+    if(rel.type==='child')  pairs.push({parentId:rel.b, childId:rel.a});
   });
 
   // Group by child
   const byChild = {};
-  parentChildPairs.forEach(({parentId,childId})=>{
+  pairs.forEach(({parentId,childId})=>{
     if(!byChild[childId]) byChild[childId]=[];
     if(!byChild[childId].includes(parentId)) byChild[childId].push(parentId);
   });
 
   Object.entries(byChild).forEach(([childId, parentIds])=>{
     const child = state.people[childId]; if(!child) return;
-    const cx = cardCX(child);
-    const childTopY = cardTop(child);
+    const ci = cardInfo(child);
+    const GAP = 30; // space between cards for junction line
 
     if(parentIds.length === 1){
-      // Single parent — simple curve
       const par = state.people[parentIds[0]]; if(!par) return;
-      const px = cardCX(par), py = cardBottom(par);
-      const junctionY = childTopY - 20;
-      line(px, py, px, junctionY, GREEN);
-      line(cx, junctionY, cx, childTopY, GREEN);
-      line(Math.min(px,cx), junctionY, Math.max(px,cx), junctionY, GREEN);
-      label(cx, childTopY - 26, 'child', GREEN);
+      const pi = cardInfo(par);
+      // Simple elbow: down from parent bottom, across, up to child top
+      const jy = ci.top - GAP;
+      ln(pi.cx, pi.bottom, pi.cx, jy, GREEN);
+      ln(pi.cx, jy, ci.cx, jy, GREEN);
+      ln(ci.cx, jy, ci.cx, ci.top, GREEN);
+      lbl(ci.cx, ci.top - GAP/2 - 2, 'child', GREEN);
     } else {
-      // Multiple parents — horizontal bar between parents, drop to child
-      const pars = parentIds.map(pid=>state.people[pid]).filter(Boolean);
-      const pxs = pars.map(p=>cardCX(p));
-      const pys = pars.map(p=>cardBottom(p));
-      const junctionY = childTopY - 20;
-      const barX1 = Math.min(...pxs);
-      const barX2 = Math.max(...pxs);
-      const barMidX = (barX1+barX2)/2;
+      const pars = parentIds.map(id=>state.people[id]).filter(Boolean);
+      const infos = pars.map(p=>cardInfo(p));
+      const jy = ci.top - GAP;
+      const xs = infos.map(i=>i.cx);
+      const barX1 = Math.min(...xs);
+      const barX2 = Math.max(...xs);
+      const barMid = (barX1+barX2)/2;
 
-      // Drop lines from each parent down to junction bar
-      pxs.forEach((px,i)=>{
-        line(px, pys[i], px, junctionY, GREEN);
+      // Drop from each parent to junction bar
+      infos.forEach(pi=>{
+        ln(pi.cx, pi.bottom, pi.cx, jy, GREEN);
       });
-      // Horizontal bar connecting parents at junction level
-      line(barX1, junctionY, barX2, junctionY, GREEN);
-      // Drop from midpoint of bar down to child
-      line(barMidX, junctionY, barMidX, junctionY+8, GREEN);
-      line(barMidX, junctionY+8, cx, junctionY+8, GREEN);
-      line(cx, junctionY+8, cx, childTopY, GREEN);
-      label(cx, childTopY - 26, 'child', GREEN);
+      // Horizontal bar
+      ln(barX1, jy, barX2, jy, GREEN);
+      // Drop from bar midpoint to child top
+      ln(barMid, jy, ci.cx, jy, GREEN);
+      ln(ci.cx, jy, ci.cx, ci.top, GREEN);
+      lbl(ci.cx, ci.top - GAP/2 - 2, 'child', GREEN);
     }
   });
 }
