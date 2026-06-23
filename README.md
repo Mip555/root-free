@@ -6,6 +6,8 @@ No account. No subscription. No server. Your family's history stays on your devi
 
 **Live app → [mip555.github.io/root-free](https://mip555.github.io/root-free)**
 
+![RootFree](screenshot.png)
+
 ---
 
 ## The problem with existing tools
@@ -20,7 +22,7 @@ RootFree works the other way around. Everything runs in your browser. Nothing is
 
 **Building your tree**
 - Add people with name, photo, birth and death years, birthplace, occupation, and notes
-- Connect people as parent, child, partner, or sibling
+- Connect people as parent, child, partner, or sibling — connections can be removed individually from each person's detail view
 - Drag and reposition cards freely on an infinite canvas
 - Auto-arrange by generation or grid with one click
 
